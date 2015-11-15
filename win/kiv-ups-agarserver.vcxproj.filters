@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="src\Network">
+      <UniqueIdentifier>{61cc53d0-efa7-444d-961e-64b0213aae2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\System">
+      <UniqueIdentifier>{e35b0a0d-cf02-48eb-b3ed-809951579930}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Gameplay">
+      <UniqueIdentifier>{052bc3fe-14a2-4b77-a582-3120fd8d81d3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\Network\Network.cpp">
+      <Filter>src\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\System\Application.cpp">
+      <Filter>src\System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\System\Config.cpp">
+      <Filter>src\System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\System\Log.cpp">
+      <Filter>src\System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\System\main.cpp">
+      <Filter>src\System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Gameplay\Player.cpp">
+      <Filter>src\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Gameplay\WorldObject.cpp">
+      <Filter>src\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Network\GamePacket.cpp">
+      <Filter>src\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Network\Session.cpp">
+      <Filter>src\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Network\PacketHandlers.cpp">
+      <Filter>src\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\System\Storage.cpp">
+      <Filter>src\System</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\Network\Network.h">
+      <Filter>src\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\System\Singleton.h">
+      <Filter>src\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\System\Application.h">
+      <Filter>src\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\System\Config.h">
+      <Filter>src\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\System\General.h">
+      <Filter>src\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\System\Log.h">
+      <Filter>src\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Gameplay\Player.h">
+      <Filter>src\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Gameplay\WorldObject.h">
+      <Filter>src\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Network\GamePacket.h">
+      <Filter>src\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Network\Opcodes.h">
+      <Filter>src\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Network\StatusCodes.h">
+      <Filter>src\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Network\Session.h">
+      <Filter>src\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Network\PacketHandlers.h">
+      <Filter>src\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\System\Storage.h">
+      <Filter>src\System</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

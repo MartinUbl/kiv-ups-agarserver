@@ -1,0 +1,76 @@
+#ifndef AGAR_GAMEPACKET_H
+#define AGAR_GAMEPACKET_H
+
+#include <cstdint>
+#include <exception>
+
+/* Exception thrown when trying to read more than available remaining bytes */
+class PacketReadException : public std::exception
+{
+    public:
+        /* Only constructor we use to store values we need */
+        PacketReadException(int pos, int attemptsize) : position(pos), attemptSize(attemptsize) { };
+
+        /* Retrieves last valid position - the cursor position before read attempt */
+        int GetPosition() { return position; };
+        /* Retrieves the size we attempted to read */
+        int GetAttemptSize() { return attemptSize; };
+
+    private:
+        /* cursor position before read attempt */
+        int position;
+        /* size we attempted to acquire */
+        int attemptSize;
+};
+
+/* Class wrapping game packet header and contents */
+class GamePacket
+{
+    public:
+        /* default constructor, almost useless */
+        GamePacket();
+        /* constructor for known packet headers */
+        GamePacket(uint16_t opcode, uint16_t size = 0);
+        ~GamePacket();
+
+        /* Sets data, typically when read from socket */
+        void SetData(uint8_t* data);
+        /* Retrieves packet opcode */
+        uint16_t GetOpcode();
+        /* Retrieves packet contents size (excluding header!) */
+        uint16_t GetSize();
+
+        /* Sets read cursor position */
+        void SetReadPos(uint16_t pos);
+
+        /* Reads zero-terminated string on current location */
+        std::string ReadString();
+        /* Reads 32bit unsigned integer on current location */
+        uint32_t ReadUInt32();
+        /* Reads 32bit signed integer on current location */
+        int32_t ReadInt32();
+        /* Reads 16bit unsigned short on current location */
+        uint16_t ReadUInt16();
+        /* Reads 16bit signed short on current location */
+        int16_t ReadInt16();
+        /* Reads 8bit unsigned byte on current location */
+        uint8_t ReadUInt8();
+        /* Reads 8bit signed byte on current location */
+        int8_t ReadInt8();
+        /* Reads 32bit floating point number on current location */
+        float ReadFloat();
+
+    protected:
+        /* packet opcode */
+        uint16_t m_opcode;
+        /* contents size (excluding header) */
+        uint16_t m_size;
+
+        /* packet contents (excluding header) */
+        uint8_t* m_data;
+
+        /* read cursor (points to first byte, that will be read by next Read* method) */
+        uint16_t m_readPos;
+};
+
+#endif
