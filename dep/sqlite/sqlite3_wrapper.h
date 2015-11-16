@@ -65,6 +65,8 @@ class SQLiteDB
 
         /* Performs query on opened database */
         SQLiteQueryResult* Query(const char* qr, ...);
+        /* Executes command on opened database - does not expect result */
+        bool Execute(const char* qr, ...);
 
     private:
         /* Hidden constructor, use factory method for creating instances */

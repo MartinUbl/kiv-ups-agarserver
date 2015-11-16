@@ -2,6 +2,7 @@
 #define AGAR_NETWORK_H
 
 #include "Singleton.h"
+#include "GamePacket.h"
 
 #include <list>
 
@@ -69,6 +70,7 @@ enum ConnectionState
 };
 
 class Player;
+class Session;
 
 /* Client record used when storing active player */
 struct ClientRecord
@@ -89,6 +91,11 @@ class Network
         /* Accepts new connections and processes messages/errors on currently estabilished ones */
         void Update();
 
+        /* Sends packet to specific player */
+        void SendPacket(Player* plr, GamePacket &pkt);
+        /* Sends packet to specific session */
+        void SendPacket(Session* sess, GamePacket &pkt);
+
     protected:
         /* Hidden singleton constructor */
         Network();
@@ -98,6 +105,9 @@ class Network
         void AcceptConnections();
         /* Reads data from all sockets enlisted, detects connection problems, disconnections, etc. */
         void UpdateClients();
+
+        /* Sends game packet to specified socket */
+        void SendPacket(SOCK socket, GamePacket &pkt);
 
         /* Closes client socket using OS-dependent routines */
         void CloseClientSocket(SOCK socket);

@@ -1,10 +1,10 @@
 #include "General.h"
+#include "GamePacket.h"
 #include "Network.h"
 #include "Log.h"
 #include "Config.h"
 #include "Session.h"
 #include "Player.h"
-#include "GamePacket.h"
 
 Network::Network()
 {
@@ -179,18 +179,18 @@ void Network::UpdateClients()
         sess = plr->GetSession();
 
         // try to read from socket assigned to client
-        result = recv(sess->GetSocket(), (char*)&header_buf, 2 * sizeof(uint16_t), 0);
+        result = recv(sess->GetSocket(), (char*)&header_buf, GAMEPACKET_HEADER_SIZE, 0);
         error = LASTERROR();
 
         // some data available
         if (result > 0 && error != SOCKETWOULDBLOCK)
         {
             // size read must be equal to header length
-            if (result == 2 * sizeof(uint16_t) && header_buf[1] < MAX_GAME_PACKET_SIZE)
+            if (result == GAMEPACKET_HEADER_SIZE && header_buf[1] < MAX_GAME_PACKET_SIZE)
             {
                 // following memory is deallocated in GamePacket destructor, or in near error handler
                 recvdata = new uint8_t[header_buf[1]];
-                result = recv(sess->GetSocket(), (char*)&recvdata, header_buf[1], 0);
+                result = recv(sess->GetSocket(), (char*)recvdata, header_buf[1], 0);
                 error = LASTERROR();
 
                 // malformed packet - received less bytes than expected
@@ -208,7 +208,7 @@ void Network::UpdateClients()
                 // build packet (this will cause previous packet destructor call and new packet constructor call)
                 pkt = GamePacket(header_buf[0], header_buf[1]);
                 // pass the data
-                pkt.SetData(recvdata);
+                pkt.SetData(recvdata, header_buf[1]);
 
                 // and let the session handle the packet - cleanup is done in GamePacket destructor
                 sess->HandlePacket(pkt);
@@ -263,4 +263,33 @@ std::list<ClientRecord*>::iterator Network::RemoveClient(std::list<ClientRecord*
     // TODO: lookup client in rooms, to remove him from here
 
     return m_clients.erase(rec);
+}
+
+void Network::SendPacket(Player* plr, GamePacket &pkt)
+{
+    SendPacket(plr->GetSession()->GetSocket(), pkt);
+}
+
+void Network::SendPacket(Session* sess, GamePacket &pkt)
+{
+    SendPacket(sess->GetSocket(), pkt);
+}
+
+void Network::SendPacket(SOCK socket, GamePacket &pkt)
+{
+    uint16_t op, sz;
+    uint8_t* tosend = new uint8_t[GAMEPACKET_HEADER_SIZE + pkt.GetSize()];
+
+    op = pkt.GetOpcode();
+    sz = pkt.GetSize();
+
+    // write opcode
+    memcpy(tosend, &op, 2);
+    // write contents size
+    memcpy(tosend + 2, &sz, 2);
+    // write contents
+    memcpy(tosend + 4, pkt.GetData(), sz);
+
+    // send response
+    send(socket, (const char*)tosend, sz + 2 + 2, 0);
 }

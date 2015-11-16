@@ -25,6 +25,7 @@ namespace PacketHandlers
     PACKET_HANDLER(Handle_NULL);
     PACKET_HANDLER(Handle_ServerSide);
     PACKET_HANDLER(HandleLoginRequest);
+    PACKET_HANDLER(HandleRegisterRequest);
 };
 
 /* table of packet handlers; the opcode is also an index here */
@@ -32,7 +33,7 @@ static PacketHandlerStructure PacketHandlerTable[] = {
     { &PacketHandlers::Handle_NULL },               // OPCODE_NONE
     { &PacketHandlers::HandleLoginRequest },        // CP_LOGIN
     { &PacketHandlers::Handle_ServerSide },         // SP_LOGIN_RESPONSE
-    { &PacketHandlers::Handle_NULL },               // CP_REGISTER
+    { &PacketHandlers::HandleRegisterRequest },     // CP_REGISTER
     { &PacketHandlers::Handle_ServerSide },         // SP_REGISTER_RESPONSE
     { &PacketHandlers::Handle_NULL },               // CP_ROOM_LIST
     { &PacketHandlers::Handle_ServerSide },         // SP_ROOM_LIST_RESPONSE

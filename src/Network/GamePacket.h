@@ -3,6 +3,10 @@
 
 #include <cstdint>
 #include <exception>
+#include <vector>
+
+/* packet header size - 2B for opcode, 2B for size */
+#define GAMEPACKET_HEADER_SIZE 4
 
 /* Exception thrown when trying to read more than available remaining bytes */
 class PacketReadException : public std::exception
@@ -34,7 +38,9 @@ class GamePacket
         ~GamePacket();
 
         /* Sets data, typically when read from socket */
-        void SetData(uint8_t* data);
+        void SetData(uint8_t* data, uint16_t size);
+        /* Retrieves data array pointer */
+        uint8_t* GetData();
         /* Retrieves packet opcode */
         uint16_t GetOpcode();
         /* Retrieves packet contents size (excluding header!) */
@@ -60,17 +66,41 @@ class GamePacket
         /* Reads 32bit floating point number on current location */
         float ReadFloat();
 
+        /* Writes zero-terminated string on current location */
+        void WriteString(const char* str);
+        /* Writes 32bit unsigned integer on current location */
+        void WriteUInt32(uint32_t val);
+        /* Writes 32bit signed integer on current location */
+        void WriteInt32(int32_t val);
+        /* Writes 16bit unsigned integer on current location */
+        void WriteUInt16(uint16_t val);
+        /* Writes 16bit signed integer on current location */
+        void WriteInt16(int16_t val);
+        /* Writes 8bit unsigned integer on current location */
+        void WriteUInt8(uint8_t val);
+        /* Writes 8bit signed integer on current location */
+        void WriteInt8(int8_t val);
+        /* Writes 32bit floating point number on current location */
+        void WriteFloat(float val);
+
     protected:
+        /* Internal method for reading general data regardless of their type */
+        void _Read(void* dst, size_t size);
+        /* Internal method for writing general data regardless of their type */
+        void _Write(void* data, size_t size);
+
         /* packet opcode */
         uint16_t m_opcode;
         /* contents size (excluding header) */
         uint16_t m_size;
 
         /* packet contents (excluding header) */
-        uint8_t* m_data;
+        std::vector<uint8_t> m_data;
 
         /* read cursor (points to first byte, that will be read by next Read* method) */
         uint16_t m_readPos;
+        /* write cursor (points to first byte, that will be written by next Write* method) */
+        uint16_t m_writePos;
 };
 
 #endif

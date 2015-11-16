@@ -5,10 +5,13 @@ VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kiv-ups-agarserver", "kiv-ups-agarserver.vcxproj", "{64DCC0F2-5069-49A2-82C7-84E17BC1F7C3}"
 	ProjectSection(ProjectDependencies) = postProject
+		{2D904E64-AA27-4DC7-A32B-3CD5D42E49F8} = {2D904E64-AA27-4DC7-A32B-3CD5D42E49F8}
 		{FA9C6FDD-09A5-4D72-8F28-E4AAB788A29F} = {FA9C6FDD-09A5-4D72-8F28-E4AAB788A29F}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dep-sqlite", "dep-sqlite\dep-sqlite.vcxproj", "{FA9C6FDD-09A5-4D72-8F28-E4AAB788A29F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dep-sha1", "dep-sha1\dep-sha1.vcxproj", "{2D904E64-AA27-4DC7-A32B-3CD5D42E49F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +27,10 @@ Global
 		{FA9C6FDD-09A5-4D72-8F28-E4AAB788A29F}.Debug|Win32.Build.0 = Debug|Win32
 		{FA9C6FDD-09A5-4D72-8F28-E4AAB788A29F}.Release|Win32.ActiveCfg = Release|Win32
 		{FA9C6FDD-09A5-4D72-8F28-E4AAB788A29F}.Release|Win32.Build.0 = Release|Win32
+		{2D904E64-AA27-4DC7-A32B-3CD5D42E49F8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2D904E64-AA27-4DC7-A32B-3CD5D42E49F8}.Debug|Win32.Build.0 = Debug|Win32
+		{2D904E64-AA27-4DC7-A32B-3CD5D42E49F8}.Release|Win32.ActiveCfg = Release|Win32
+		{2D904E64-AA27-4DC7-A32B-3CD5D42E49F8}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

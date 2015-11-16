@@ -2,21 +2,19 @@
 #include "GamePacket.h"
 #include "Log.h"
 
-GamePacket::GamePacket() : m_opcode(0), m_size(0), m_data(nullptr), m_readPos(0)
+GamePacket::GamePacket() : m_opcode(0), m_size(0), m_readPos(0), m_writePos(0)
 {
     //
 }
 
-GamePacket::GamePacket(uint16_t opcode, uint16_t size) : m_opcode(opcode), m_size(size), m_data(nullptr), m_readPos(0)
+GamePacket::GamePacket(uint16_t opcode, uint16_t size) : m_opcode(opcode), m_size(size), m_readPos(0), m_writePos(0)
 {
-    //
+    m_data.reserve(size);
 }
 
 GamePacket::~GamePacket()
 {
-    // if there was any data, delete them to avoid memory leaks
-    if (m_data)
-        delete[] m_data;
+    m_data.clear();
 }
 
 void GamePacket::SetReadPos(uint16_t pos)
@@ -59,97 +57,120 @@ std::string GamePacket::ReadString()
     return std::string((const char*)&m_data[oldReadPos], i - oldReadPos);
 }
 
+void GamePacket::_Read(void* dst, size_t size)
+{
+    // disallow reading more bytes than available
+    if (m_readPos + size > m_size)
+        throw new PacketReadException(m_readPos, m_size);
+
+    memcpy(dst, &m_data[m_readPos], size);
+    m_readPos += size;
+}
+
 uint32_t GamePacket::ReadUInt32()
 {
-    // disallow reading more bytes, than available
-    if (m_readPos + 4 > m_size)
-        throw new PacketReadException(m_readPos, 4);
-
     uint32_t toret;
-    memcpy(&toret, &m_data[m_readPos], 4);
-    m_readPos += 4;
+    _Read(&toret, 4);
     return toret;
 }
 
 int32_t GamePacket::ReadInt32()
 {
-    // disallow reading more bytes, than available
-    if (m_readPos + 4 > m_size)
-        throw new PacketReadException(m_readPos, 4);
-
     int32_t toret;
-    memcpy(&toret, &m_data[m_readPos], 4);
-    m_readPos += 4;
+    _Read(&toret, 4);
     return toret;
 }
 
 uint16_t GamePacket::ReadUInt16()
 {
-    // disallow reading more bytes, than available
-    if (m_readPos + 2 > m_size)
-        throw new PacketReadException(m_readPos, 2);
-
     uint16_t toret;
-    memcpy(&toret, &m_data[m_readPos], 2);
-    m_readPos += 2;
+    _Read(&toret, 2);
     return toret;
 }
 
 int16_t GamePacket::ReadInt16()
 {
-    // disallow reading more bytes, than available
-    if (m_readPos + 2 > m_size)
-        throw new PacketReadException(m_readPos, 2);
-
     int16_t toret;
-    memcpy(&toret, &m_data[m_readPos], 2);
-    m_readPos += 2;
+    _Read(&toret, 2);
     return toret;
 }
 
 uint8_t GamePacket::ReadUInt8()
 {
-    // disallow reading more bytes, than available
-    if (m_readPos + 1 > m_size)
-        throw new PacketReadException(m_readPos, 1);
-
     uint8_t toret;
-    memcpy(&toret, &m_data[m_readPos], 1);
-    m_readPos += 1;
+    _Read(&toret, 1);
     return toret;
 }
 
 int8_t GamePacket::ReadInt8()
 {
-    // disallow reading more bytes, than available
-    if (m_readPos + 1 > m_size)
-        throw new PacketReadException(m_readPos, 1);
-
     int8_t toret;
-    memcpy(&toret, &m_data[m_readPos], 1);
-    m_readPos += 1;
+    _Read(&toret, 1);
     return toret;
 }
 
 float GamePacket::ReadFloat()
 {
-    // disallow reading more bytes, than available
-    if (m_readPos + 4 > m_size)
-        throw new PacketReadException(m_readPos, 4);
-
     float toret;
-    memcpy(&toret, &m_data[m_readPos], 4);
-    m_readPos += 4;
+    _Read(&toret, 4);
     return toret;
 }
 
-void GamePacket::SetData(uint8_t* data)
+void GamePacket::_Write(void* data, size_t size)
 {
-    // clear previously stored data, if any
-    if (m_data)
-        delete[] m_data;
+    m_data.resize(m_writePos + 1 + size);
+    memcpy(&m_data[m_writePos], data, size);
+    m_writePos += size;
+}
 
-    m_data = data;
+void GamePacket::WriteString(const char* str)
+{
+    _Write((void*)str, strlen(str) + 1);
+}
+
+void GamePacket::WriteUInt32(uint32_t val)
+{
+    _Write(&val, sizeof(uint32_t));
+}
+
+void GamePacket::WriteInt32(int32_t val)
+{
+    _Write(&val, sizeof(int32_t));
+}
+
+void GamePacket::WriteUInt16(uint16_t val)
+{
+    _Write(&val, sizeof(uint16_t));
+}
+
+void GamePacket::WriteInt16(int16_t val)
+{
+    _Write(&val, sizeof(int16_t));
+}
+
+void GamePacket::WriteUInt8(uint8_t val)
+{
+    _Write(&val, sizeof(uint8_t));
+}
+
+void GamePacket::WriteInt8(int8_t val)
+{
+    _Write(&val, sizeof(int8_t));
+}
+
+void GamePacket::WriteFloat(float val)
+{
+    _Write(&val, sizeof(float));
+}
+
+void GamePacket::SetData(uint8_t* data, uint16_t size)
+{
+    m_data = std::vector<uint8_t>(data, data + size);
+}
+
+uint8_t* GamePacket::GetData()
+{
+    return m_data.data();
 }
 
 uint16_t GamePacket::GetOpcode()

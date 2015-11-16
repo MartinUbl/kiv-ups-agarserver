@@ -149,3 +149,62 @@ SQLiteQueryResult* Storage::GetTableStructure(const char* table)
 {
     return m_mainDB->Query("PRAGMA table_info(%s)", table);
 }
+
+StorageResult::UserRecord* StorageResult::UserRecord::Build(SQLiteResultRow* rrow)
+{
+    StorageResult::UserRecord* nr = new StorageResult::UserRecord;
+
+    nr->id = rrow->GetInt(0);
+    nr->username = rrow->GetString(1);
+    nr->passwordHash = rrow->GetString(2);
+
+    return nr;
+}
+
+StorageResult::UserRecord* Storage::GetUserById(int32_t id)
+{
+    SQLiteQueryResult* res = m_mainDB->Query("SELECT id, username, password FROM users WHERE id = %i", id);
+    if (!res)
+        return nullptr;
+
+    if (res->GetRowCount() == 0)
+    {
+        res->Finalize()->Destroy();
+        return nullptr;
+    }
+
+    SQLiteResultRow* rrow = res->Fetch();
+
+    // we assume there is only one user with this ID (guaranteed, because id is primary key)
+    if (rrow)
+        return StorageResult::UserRecord::Build(rrow);
+
+    return nullptr;
+}
+
+StorageResult::UserRecord* Storage::GetUserByUsername(const char* username)
+{
+    SQLiteQueryResult* res = m_mainDB->Query("SELECT id, username, password FROM users WHERE username = '%s'", username);
+    if (!res)
+        return nullptr;
+
+    if (res->GetRowCount() == 0)
+    {
+        res->Finalize()->Destroy();
+        return nullptr;
+    }
+
+    SQLiteResultRow* rrow = res->Fetch();
+
+    // we assume there is only one user with this ID (guaranteed, because id is primary key)
+    if (rrow)
+        return StorageResult::UserRecord::Build(rrow);
+
+    return nullptr;
+}
+
+void Storage::StoreUser(const char* username, const char* passhash)
+{
+    if (!m_mainDB->Execute("INSERT INTO users (username, password) VALUES ('%s', '%s')", username, passhash))
+        sLog->Error("STORAGE: Could not insert user with name '%s' to database", username);
+}

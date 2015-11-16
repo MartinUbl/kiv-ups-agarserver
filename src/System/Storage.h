@@ -36,6 +36,24 @@ namespace DatabaseStructure
     };
 };
 
+/* namespace for fetched Storage getters result sets */
+namespace StorageResult
+{
+    /* result of Users table select */
+    struct UserRecord
+    {
+        /* assigned id */
+        int32_t id;
+        /* user name */
+        const char* username;
+        /* SHA1 password hash stored */
+        const char* passwordHash;
+
+        /* Static factory method for building record from fetched row */
+        static UserRecord* Build(SQLiteResultRow* rrow);
+    };
+};
+
 /* Storage class used for accessing data in SQLite and runtime storage */
 class Storage
 {
@@ -45,6 +63,10 @@ class Storage
 
         /* Initializes database, check for valid structure and makes sure storage layer is ready */
         bool Init();
+
+        StorageResult::UserRecord* GetUserById(int32_t id);
+        StorageResult::UserRecord* GetUserByUsername(const char* username);
+        void StoreUser(const char* username, const char* passhash);
 
     protected:
         /* Hidden constructor (singleton) */

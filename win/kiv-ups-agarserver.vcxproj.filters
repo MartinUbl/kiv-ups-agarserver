@@ -49,6 +49,9 @@
     <ClCompile Include="..\src\System\Storage.cpp">
       <Filter>src\System</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\System\Helpers.cpp">
+      <Filter>src\System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Network\Network.h">
@@ -91,6 +94,12 @@
       <Filter>src\Network</Filter>
     </ClInclude>
     <ClInclude Include="..\src\System\Storage.h">
+      <Filter>src\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\System\Version.h">
+      <Filter>src\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\System\Helpers.h">
       <Filter>src\System</Filter>
     </ClInclude>
   </ItemGroup>

@@ -148,3 +148,16 @@ SQLiteQueryResult* SQLiteDB::Query(const char* qr, ...)
 
     return res;
 }
+
+bool SQLiteDB::Execute(const char* qr, ...)
+{
+    va_list argList;
+    va_start(argList, qr);
+    char buf[2048];
+    vsnprintf(buf, 2048, qr, argList);
+    va_end(argList);
+
+    int result = sqlite3_exec(m_DB, buf, nullptr, nullptr, nullptr);
+
+    return (result == SQLITE_OK);
+}
