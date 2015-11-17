@@ -1,6 +1,7 @@
 #include "General.h"
 #include "GamePacket.h"
 #include "Log.h"
+#include "Helpers.h"
 
 GamePacket::GamePacket() : m_opcode(0), m_size(0), m_readPos(0), m_writePos(0)
 {
@@ -71,28 +72,28 @@ uint32_t GamePacket::ReadUInt32()
 {
     uint32_t toret;
     _Read(&toret, 4);
-    return toret;
+    return (uint32_t)ntohl(toret);
 }
 
 int32_t GamePacket::ReadInt32()
 {
     int32_t toret;
     _Read(&toret, 4);
-    return toret;
+    return (int32_t)ntohl(toret);
 }
 
 uint16_t GamePacket::ReadUInt16()
 {
     uint16_t toret;
     _Read(&toret, 2);
-    return toret;
+    return (uint16_t)ntohs(toret);
 }
 
 int16_t GamePacket::ReadInt16()
 {
     int16_t toret;
     _Read(&toret, 2);
-    return toret;
+    return (int16_t)ntohs(toret);
 }
 
 uint8_t GamePacket::ReadUInt8()
@@ -113,7 +114,7 @@ float GamePacket::ReadFloat()
 {
     float toret;
     _Read(&toret, 4);
-    return toret;
+    return (float)ntohl((uint32_t)toret);
 }
 
 void GamePacket::_Write(void* data, size_t size)
@@ -130,21 +131,25 @@ void GamePacket::WriteString(const char* str)
 
 void GamePacket::WriteUInt32(uint32_t val)
 {
+    val = htonl(val);
     _Write(&val, sizeof(uint32_t));
 }
 
 void GamePacket::WriteInt32(int32_t val)
 {
+    val = htonl(val);
     _Write(&val, sizeof(int32_t));
 }
 
 void GamePacket::WriteUInt16(uint16_t val)
 {
+    val = htons(val);
     _Write(&val, sizeof(uint16_t));
 }
 
 void GamePacket::WriteInt16(int16_t val)
 {
+    val = htons((uint16_t)val);
     _Write(&val, sizeof(int16_t));
 }
 
@@ -160,6 +165,7 @@ void GamePacket::WriteInt8(int8_t val)
 
 void GamePacket::WriteFloat(float val)
 {
+    val = (float)htonl((uint32_t)val);
     _Write(&val, sizeof(float));
 }
 

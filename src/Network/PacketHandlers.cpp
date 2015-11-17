@@ -3,6 +3,8 @@
 #include "Session.h"
 #include "Player.h"
 #include "Storage.h"
+#include "Gameplay.h"
+#include "Room.h"
 #include "Opcodes.h"
 #include "StatusCodes.h"
 #include "sha1.h"
@@ -55,6 +57,8 @@ void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
         // passwords does not match the stored one
         if (strcmp((const char*)hexbuf, user->passwordHash) != 0)
             statusCode = STATUS_LOGIN_WRONG_PASSWORD;
+        else
+            sess->GetPlayer()->SetId(user->id);
     }
 
     if (statusCode == STATUS_LOGIN_OK)
@@ -79,7 +83,7 @@ void PacketHandlers::HandleRegisterRequest(Session* sess, GamePacket& packet)
     version = packet.ReadUInt32();
 
     // prepare response packet
-    GamePacket resp(SP_LOGIN_RESPONSE, 1);
+    GamePacket resp(SP_REGISTER_RESPONSE, 1);
     uint8_t statusCode = STATUS_REGISTER_OK;
 
     if (username.length() < 4)
@@ -114,9 +118,44 @@ void PacketHandlers::HandleRegisterRequest(Session* sess, GamePacket& packet)
             sha1::toHexString(resbuf, hexbuf);
 
             sStorage->StoreUser(username.c_str(), (const char*)hexbuf);
+
+            user = sStorage->GetUserByUsername(username.c_str());
+            if (!user)
+                statusCode = STATUS_REGISTER_INVALID_NAME;
+            else
+            {
+                sess->GetPlayer()->SetId(user->id);
+                delete user;
+            }
         }
     }
 
     resp.WriteUInt8(statusCode);
+    sNetwork->SendPacket(sess, resp);
+}
+
+void PacketHandlers::HandleRoomListRequest(Session* sess, GamePacket& packet)
+{
+    uint8_t gameType;
+    Room* tmp;
+
+    gameType = packet.ReadInt8();
+
+    std::list<Room*> roomList;
+
+    // fetch room list from gameplay singleton
+    sGameplay->GetRoomList(roomList, gameType);
+
+    // and build response
+    GamePacket resp(SP_ROOM_LIST_RESPONSE, 4 + roomList.size() * (4 + 1 + 1 + 1));
+    resp.WriteUInt32(roomList.size());
+    for (std::list<Room*>::iterator itr = roomList.begin(); itr != roomList.end(); ++itr)
+    {
+        tmp = *itr;
+        resp.WriteUInt32(tmp->GetId());
+        resp.WriteUInt8(tmp->GetGameType());
+        resp.WriteUInt8(tmp->GetPlayerCount());
+        resp.WriteUInt8(tmp->GetCapacity());
+    }
     sNetwork->SendPacket(sess, resp);
 }

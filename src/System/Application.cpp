@@ -4,6 +4,7 @@
 #include "Network.h"
 #include "Storage.h"
 #include "Log.h"
+#include "Gameplay.h"
 
 #include <thread>
 
@@ -33,6 +34,8 @@ bool Application::Init(int argc, char** argv)
 
     if (!sNetwork->Startup())
         return false;
+
+    sGameplay->Init();
 
     sLog->Info("Initialization sequence complete!\n");
 

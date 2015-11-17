@@ -16,12 +16,26 @@ class Player : public WorldObject
         /* Retrieves stored session */
         Session* GetSession();
 
+        /* Sets room ID the player has joined */
+        void SetRoomId(uint32_t roomId);
+        /* Retrieves player room ID */
+        uint32_t GetRoomId();
+
+        /* Sets player ID */
+        void SetId(uint32_t id);
+        /* Gets player ID */
+        uint32_t GetId();
+
     protected:
         //
 
     private:
+        /* Player ID */
+        uint32_t m_id;
         /* Stored session associated with network client */
         Session* m_session;
+        /* Player room ID */
+        uint32_t m_roomId;
 };
 
 #endif

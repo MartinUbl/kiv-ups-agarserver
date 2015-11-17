@@ -52,6 +52,12 @@
     <ClCompile Include="..\src\System\Helpers.cpp">
       <Filter>src\System</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Gameplay\Gameplay.cpp">
+      <Filter>src\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Gameplay\Room.cpp">
+      <Filter>src\Gameplay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Network\Network.h">
@@ -101,6 +107,12 @@
     </ClInclude>
     <ClInclude Include="..\src\System\Helpers.h">
       <Filter>src\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Gameplay\Gameplay.h">
+      <Filter>src\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Gameplay\Room.h">
+      <Filter>src\Gameplay</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

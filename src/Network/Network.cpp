@@ -5,6 +5,7 @@
 #include "Config.h"
 #include "Session.h"
 #include "Player.h"
+#include "Helpers.h"
 
 Network::Network()
 {
@@ -185,6 +186,9 @@ void Network::UpdateClients()
         // some data available
         if (result > 0 && error != SOCKETWOULDBLOCK)
         {
+            header_buf[0] = ntohs(header_buf[0]);
+            header_buf[1] = ntohs(header_buf[1]);
+
             // size read must be equal to header length
             if (result == GAMEPACKET_HEADER_SIZE && header_buf[1] < MAX_GAME_PACKET_SIZE)
             {
@@ -280,16 +284,16 @@ void Network::SendPacket(SOCK socket, GamePacket &pkt)
     uint16_t op, sz;
     uint8_t* tosend = new uint8_t[GAMEPACKET_HEADER_SIZE + pkt.GetSize()];
 
-    op = pkt.GetOpcode();
-    sz = pkt.GetSize();
+    op = htons(pkt.GetOpcode());
+    sz = htons(pkt.GetSize());
 
     // write opcode
     memcpy(tosend, &op, 2);
     // write contents size
     memcpy(tosend + 2, &sz, 2);
     // write contents
-    memcpy(tosend + 4, pkt.GetData(), sz);
+    memcpy(tosend + 4, pkt.GetData(), pkt.GetSize());
 
     // send response
-    send(socket, (const char*)tosend, sz + 2 + 2, 0);
+    send(socket, (const char*)tosend, pkt.GetSize() + GAMEPACKET_HEADER_SIZE, 0);
 }
