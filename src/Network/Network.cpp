@@ -6,6 +6,8 @@
 #include "Session.h"
 #include "Player.h"
 #include "Helpers.h"
+#include "Gameplay.h"
+#include "Room.h"
 
 Network::Network()
 {
@@ -264,7 +266,12 @@ void Network::InsertClient(Player* plr)
 
 std::list<ClientRecord*>::iterator Network::RemoveClient(std::list<ClientRecord*>::iterator rec)
 {
-    // TODO: lookup client in rooms, to remove him from here
+    // lookup client in rooms, to remove him from here
+    if ((*rec)->player->GetRoomId() > 0)
+    {
+        Room* rm = sGameplay->GetRoom((*rec)->player->GetRoomId());
+        rm->RemovePlayer((*rec)->player);
+    }
 
     return m_clients.erase(rec);
 }

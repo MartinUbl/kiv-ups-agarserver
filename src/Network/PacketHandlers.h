@@ -27,6 +27,7 @@ namespace PacketHandlers
     PACKET_HANDLER(HandleLoginRequest);
     PACKET_HANDLER(HandleRegisterRequest);
     PACKET_HANDLER(HandleRoomListRequest);
+    PACKET_HANDLER(HandleJoinRoomRequest);
 };
 
 /* table of packet handlers; the opcode is also an index here */
@@ -38,10 +39,11 @@ static PacketHandlerStructure PacketHandlerTable[] = {
     { &PacketHandlers::Handle_ServerSide },         // SP_REGISTER_RESPONSE
     { &PacketHandlers::HandleRoomListRequest },     // CP_ROOM_LIST
     { &PacketHandlers::Handle_ServerSide },         // SP_ROOM_LIST_RESPONSE
-    { &PacketHandlers::Handle_NULL },               // CP_JOIN_ROOM
+    { &PacketHandlers::HandleJoinRoomRequest },     // CP_JOIN_ROOM
     { &PacketHandlers::Handle_ServerSide },         // SP_JOIN_ROOM_RESPONSE
     { &PacketHandlers::Handle_NULL },               // CP_CREATE_ROOM
     { &PacketHandlers::Handle_ServerSide },         // SP_CREATE_ROOM_RESPONSE
+    { &PacketHandlers::Handle_NULL },               // CP_WORLD_REQUEST
     { &PacketHandlers::Handle_ServerSide },         // SP_NEW_PLAYER
     { &PacketHandlers::Handle_ServerSide },         // SP_NEW_WORLD
     { &PacketHandlers::Handle_NULL },               // CP_MOVE_DIRECTION

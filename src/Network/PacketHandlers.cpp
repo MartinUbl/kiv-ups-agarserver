@@ -159,3 +159,38 @@ void PacketHandlers::HandleRoomListRequest(Session* sess, GamePacket& packet)
     }
     sNetwork->SendPacket(sess, resp);
 }
+
+void PacketHandlers::HandleJoinRoomRequest(Session* sess, GamePacket& packet)
+{
+    uint32_t roomId;
+    uint8_t spectator;
+
+    roomId = packet.ReadUInt32();
+    spectator = packet.ReadUInt8();
+
+    Room* rm = sGameplay->GetRoom(roomId);
+
+    GamePacket resp(SP_JOIN_ROOM_RESPONSE);
+
+    uint8_t statusCode = STATUS_ROOMJOIN_OK;
+
+    if (!rm)
+        statusCode = STATUS_ROOMJOIN_FAILED_NO_SUCH_ROOM;
+    else if (rm->GetPlayerCount() >= rm->GetCapacity())
+        statusCode = STATUS_ROOMJOIN_FAILED_CAPACITY;
+    else if (sess->GetPlayer()->GetRoomId() != 0)
+        statusCode = STATUS_ROOMJOIN_FAILED_ALREADY_IN_ROOM;
+    // TODO: spectators
+    //else if (!rm->AllowSpectators() && spectator)
+    //    statusCode = STATUS_ROOMJOIN_NO_SPECTATORS;
+    else
+    {
+        rm->AddPlayer(sess->GetPlayer());
+        // something else?
+    }
+
+    resp.WriteUInt8(statusCode);
+    resp.WriteUInt32(0); // TODO: chat channels
+
+    sNetwork->SendPacket(sess, resp);
+}

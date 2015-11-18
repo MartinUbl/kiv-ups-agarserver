@@ -122,6 +122,9 @@ void GamePacket::_Write(void* data, size_t size)
     m_data.resize(m_writePos + 1 + size);
     memcpy(&m_data[m_writePos], data, size);
     m_writePos += size;
+
+    if (m_size < m_writePos + 1)
+        m_size = m_writePos + 1;
 }
 
 void GamePacket::WriteString(const char* str)
