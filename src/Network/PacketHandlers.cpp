@@ -24,7 +24,8 @@ void PacketHandlers::Handle_ServerSide(Session* sess, GamePacket& packet)
 void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
 {
     std::string username, password;
-    uint32_t version;
+    uint32_t version, playerId;
+    uint8_t statusCode;
 
     // read contents
     username = packet.ReadString();
@@ -33,7 +34,8 @@ void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
 
     // prepare response packet
     GamePacket resp(SP_LOGIN_RESPONSE, 1);
-    uint8_t statusCode = STATUS_LOGIN_OK;
+    statusCode = STATUS_LOGIN_OK;
+    playerId = 0;
 
     // retrieve user record from database
     StorageResult::UserRecord* user = sStorage->GetUserByUsername(username.c_str());
@@ -58,16 +60,23 @@ void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
         if (strcmp((const char*)hexbuf, user->passwordHash) != 0)
             statusCode = STATUS_LOGIN_WRONG_PASSWORD;
         else
+        {
             sess->GetPlayer()->SetId(user->id);
-    }
-
-    if (statusCode == STATUS_LOGIN_OK)
-    {
-        // TODO: move connection state
+            sess->GetPlayer()->SetName(user->username);
+            playerId = (uint32_t)user->id;
+        }
     }
 
     // send response
     resp.WriteUInt8(statusCode);
+    if (statusCode == STATUS_LOGIN_OK)
+    {
+        resp.WriteUInt32(playerId);
+
+        // move connection state to "lobby" after logging in
+        sess->SetConnectionState(CONNECTION_STATE_LOBBY);
+    }
+
     sNetwork->SendPacket(sess, resp);
     delete user;
 }
@@ -75,7 +84,8 @@ void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
 void PacketHandlers::HandleRegisterRequest(Session* sess, GamePacket& packet)
 {
     std::string username, password;
-    uint32_t version;
+    uint32_t version, playerId;
+    uint8_t statusCode;
 
     // read contents
     username = packet.ReadString();
@@ -84,7 +94,8 @@ void PacketHandlers::HandleRegisterRequest(Session* sess, GamePacket& packet)
 
     // prepare response packet
     GamePacket resp(SP_REGISTER_RESPONSE, 1);
-    uint8_t statusCode = STATUS_REGISTER_OK;
+    statusCode = STATUS_REGISTER_OK;
+    playerId = 0;
 
     if (username.length() < 4)
         statusCode = STATUS_REGISTER_NAME_TOO_SHORT;
@@ -125,12 +136,21 @@ void PacketHandlers::HandleRegisterRequest(Session* sess, GamePacket& packet)
             else
             {
                 sess->GetPlayer()->SetId(user->id);
+                sess->GetPlayer()->SetName(user->username);
+                playerId = (uint32_t)user->id;
                 delete user;
             }
         }
     }
 
     resp.WriteUInt8(statusCode);
+    if (statusCode == STATUS_REGISTER_OK)
+    {
+        resp.WriteUInt32(playerId);
+
+        // move connection state to "lobby" after registering
+        sess->SetConnectionState(CONNECTION_STATE_LOBBY);
+    }
     sNetwork->SendPacket(sess, resp);
 }
 
@@ -186,11 +206,37 @@ void PacketHandlers::HandleJoinRoomRequest(Session* sess, GamePacket& packet)
     else
     {
         rm->AddPlayer(sess->GetPlayer());
-        // something else?
+        // move player to game stage
+        sess->SetConnectionState(CONNECTION_STATE_GAME);
     }
 
     resp.WriteUInt8(statusCode);
     resp.WriteUInt32(0); // TODO: chat channels
 
+    sNetwork->SendPacket(sess, resp);
+}
+
+void PacketHandlers::HandleWorldRequest(Session* sess, GamePacket& packet)
+{
+    Room* plroom;
+
+    plroom = sGameplay->GetRoom(sess->GetPlayer()->GetRoomId());
+    if (!plroom)
+    {
+        // TODO: kick player
+        return;
+    }
+
+    plroom->PlaceNewPlayer(sess->GetPlayer());
+
+    GamePacket resp(SP_NEW_WORLD);
+
+    // build this player update, so the client will know, where we are and how do we look like
+    sess->GetPlayer()->BuildCreatePacketBlock(resp);
+
+    // writes 4B player count and player create block for each player in range
+    plroom->BuildPlayerCreateBlock(resp, sess->GetPlayer());
+    // writes 4B object count and object create block for each object in range
+    plroom->BuildObjectCreateBlock(resp, sess->GetPlayer());
     sNetwork->SendPacket(sess, resp);
 }

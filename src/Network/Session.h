@@ -26,6 +26,11 @@ class Session
         /* Retrieves socket info */
         sockaddr_in const& GetSockAddr();
 
+        /* Sets connection state of associated client */
+        void SetConnectionState(ConnectionState cstate);
+        /* Retrueves connection state of associated client */
+        ConnectionState GetConnectionState();
+
     private:
         /* Player pointer */
         Player* m_player;
@@ -33,6 +38,8 @@ class Session
         SOCK m_socket;
         /* Socket info */
         sockaddr_in m_sockAddr;
+        /* Client connection state */
+        ConnectionState m_connectionState;
 };
 
 #endif

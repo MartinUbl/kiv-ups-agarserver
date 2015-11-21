@@ -44,6 +44,16 @@ void Session::SetConnectionInfo(SOCK socket, sockaddr_in &addr)
     m_sockAddr = addr;
 }
 
+void Session::SetConnectionState(ConnectionState cstate)
+{
+    m_connectionState = cstate;
+}
+
+ConnectionState Session::GetConnectionState()
+{
+    return m_connectionState;
+}
+
 SOCK Session::GetSocket()
 {
     return m_socket;

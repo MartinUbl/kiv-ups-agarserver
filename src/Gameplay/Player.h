@@ -4,6 +4,8 @@
 #include "Network.h"
 #include "WorldObject.h"
 
+#define DEFAULT_INITIAL_PLAYER_SIZE 10
+
 class Session;
 
 /* Player class - object associated with one connected client 1:1 */
@@ -16,26 +18,31 @@ class Player : public WorldObject
         /* Retrieves stored session */
         Session* GetSession();
 
-        /* Sets room ID the player has joined */
-        void SetRoomId(uint32_t roomId);
-        /* Retrieves player room ID */
-        uint32_t GetRoomId();
+        /* Overrides object create block building function for player class */
+        void BuildCreatePacketBlock(GamePacket& gp) override;
 
-        /* Sets player ID */
-        void SetId(uint32_t id);
-        /* Gets player ID */
-        uint32_t GetId();
+        /* Sets player name */
+        void SetName(const char* name);
+        /* Retrieves player name */
+        const char* GetName();
 
     protected:
         //
 
     private:
-        /* Player ID */
-        uint32_t m_id;
         /* Stored session associated with network client */
         Session* m_session;
-        /* Player room ID */
-        uint32_t m_roomId;
+
+        /* player name */
+        std::string m_name;
+        /* player entity size */
+        uint32_t m_playerSize;
+        /* player color in 0RGB format (highest byte is all zero) */
+        uint32_t m_color;
+        /* moving flag for player */
+        bool m_isMoving;
+        /* the angle player is moving */
+        float m_moveAngle;
 };
 
 #endif

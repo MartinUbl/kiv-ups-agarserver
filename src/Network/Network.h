@@ -61,10 +61,9 @@
 /* enumeration of allowed connection states */
 enum ConnectionState
 {
-    CONNECTION_STATE_NONE = 0,  // newly accepted connection
-    CONNECTION_STATE_AUTH = 1,  // attempting to login/register
-    CONNECTION_STATE_LOBBY = 2, // authenticated, but not playing atm.
-    CONNECTION_STATE_GAME = 3,  // joined room and playing
+    CONNECTION_STATE_AUTH = 0,  // newly accepted connection, attempting to login/register
+    CONNECTION_STATE_LOBBY = 1, // authenticated, but not playing atm.
+    CONNECTION_STATE_GAME = 2,  // joined room and playing/spectating
 
     CONNECTION_STATE_MAX
 };
@@ -76,7 +75,8 @@ class Session;
 struct ClientRecord
 {
     Player* player;
-    ConnectionState connectionState;
+
+    // something more? bytes transferred? packets received/sent?
 };
 
 /* Networking singleton class */

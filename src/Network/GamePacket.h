@@ -48,6 +48,8 @@ class GamePacket
 
         /* Sets read cursor position */
         void SetReadPos(uint16_t pos);
+        /* Retrieves location of write cursor */
+        uint16_t GetWritePos();
 
         /* Reads zero-terminated string on current location */
         std::string ReadString();
@@ -83,11 +85,20 @@ class GamePacket
         /* Writes 32bit floating point number on current location */
         void WriteFloat(float val);
 
+        /* Writes 32bit unsigned integer at specified position */
+        void WriteUInt32At(uint32_t val, uint16_t position);
+        /* Writes 16bit unsigned integer at specified position */
+        void WriteUInt16At(uint16_t val, uint16_t position);
+        /* Writes 8bit unsigned integer at specified position */
+        void WriteUInt8At(uint8_t val, uint16_t position);
+
     protected:
         /* Internal method for reading general data regardless of their type */
         void _Read(void* dst, size_t size);
         /* Internal method for writing general data regardless of their type */
         void _Write(void* data, size_t size);
+        /* Internal method for writing general data regardless of their type on specified location */
+        void _WriteAt(void* data, size_t size, uint16_t position);
 
         /* packet opcode */
         uint16_t m_opcode;

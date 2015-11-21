@@ -167,7 +167,7 @@ void Network::CloseClientSocket(SOCK socket)
 void Network::UpdateClients()
 {
     uint16_t header_buf[2];
-    size_t result;
+    int result;
     int error;
     Player* plr;
     Session* sess;
@@ -194,27 +194,33 @@ void Network::UpdateClients()
             // size read must be equal to header length
             if (result == GAMEPACKET_HEADER_SIZE && header_buf[1] < MAX_GAME_PACKET_SIZE)
             {
-                // following memory is deallocated in GamePacket destructor, or in near error handler
-                recvdata = new uint8_t[header_buf[1]];
-                result = recv(sess->GetSocket(), (char*)recvdata, header_buf[1], 0);
-                error = LASTERROR();
-
-                // malformed packet - received less bytes than expected
-                if (result != header_buf[1])
+                // packet contents may be empty as well
+                if (header_buf[1] > 0)
                 {
-                    delete[] recvdata;
+                    // following memory is deallocated in GamePacket destructor, or in near error handler
+                    recvdata = new uint8_t[header_buf[1]];
+                    result = recv(sess->GetSocket(), (char*)recvdata, header_buf[1], 0);
+                    error = LASTERROR();
 
-                    sLog->Error("Received malformed packet: opcode %u, size %u, real size %u; disconnecting client", header_buf[0], header_buf[1], result);
-                    //shutdown
-                    //close(sess->GetSocket());
-                    itr = RemoveClient(itr);
-                    continue;
+                    // malformed packet - received less bytes than expected
+                    if (result != (int)header_buf[1])
+                    {
+                        delete[] recvdata;
+
+                        sLog->Error("Received malformed packet: opcode %u, size %u, real size %u; disconnecting client", header_buf[0], header_buf[1], result);
+                        //shutdown
+                        //close(sess->GetSocket());
+                        itr = RemoveClient(itr);
+                        continue;
+                    }
                 }
 
                 // build packet (this will cause previous packet destructor call and new packet constructor call)
                 pkt = GamePacket(header_buf[0], header_buf[1]);
-                // pass the data
-                pkt.SetData(recvdata, header_buf[1]);
+
+                // pass the data, if any
+                if (header_buf[1] > 0)
+                    pkt.SetData(recvdata, header_buf[1]);
 
                 // and let the session handle the packet - cleanup is done in GamePacket destructor
                 sess->HandlePacket(pkt);
@@ -258,8 +264,8 @@ void Network::InsertClient(Player* plr)
     ClientRecord* cr = new ClientRecord;
 
     cr->player = plr;
-    // defaulting connection state to "none"
-    cr->connectionState = CONNECTION_STATE_NONE;
+    // defaulting connection state to "auth" since we need the player to log in first
+    plr->GetSession()->SetConnectionState(CONNECTION_STATE_AUTH);
 
     m_clients.push_back(cr);
 }

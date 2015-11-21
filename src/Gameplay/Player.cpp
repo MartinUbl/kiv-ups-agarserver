@@ -1,10 +1,17 @@
 #include "General.h"
 #include "Player.h"
 #include "Session.h"
+#include "WorldObject.h"
 
-Player::Player() : WorldObject(), m_roomId(0)
+Player::Player() : WorldObject()
 {
+    SetTypeId(OBJECT_TYPE_PLAYER);
     m_session = new Session(this);
+
+    m_playerSize = DEFAULT_INITIAL_PLAYER_SIZE;
+    m_color = 0x00000000;
+    m_isMoving = false;
+    m_moveAngle = 0.0f;
 }
 
 Player::~Player()
@@ -17,22 +24,24 @@ Session* Player::GetSession()
     return m_session;
 }
 
-void Player::SetId(uint32_t id)
+void Player::SetName(const char* name)
 {
-    m_id = id;
+    m_name = std::string(name);
 }
 
-uint32_t Player::GetId()
+const char* Player::GetName()
 {
-    return m_id;
+    return m_name.c_str();
 }
 
-void Player::SetRoomId(uint32_t roomId)
+void Player::BuildCreatePacketBlock(GamePacket& gp)
 {
-    m_roomId = roomId;
-}
-
-uint32_t Player::GetRoomId()
-{
-    return m_roomId;
+    gp.WriteUInt32(m_id);
+    gp.WriteString(m_name.c_str());
+    gp.WriteUInt32(m_playerSize);
+    gp.WriteFloat(m_position.x);
+    gp.WriteFloat(m_position.y);
+    gp.WriteUInt32(m_color);
+    gp.WriteUInt8(m_isMoving ? 1 : 0);
+    gp.WriteFloat(m_moveAngle);
 }

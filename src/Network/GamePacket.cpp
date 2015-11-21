@@ -30,6 +30,11 @@ void GamePacket::SetReadPos(uint16_t pos)
     m_readPos = pos;
 }
 
+uint16_t GamePacket::GetWritePos()
+{
+    return m_writePos;
+}
+
 std::string GamePacket::ReadString()
 {
     // we can detect only starting point being out of range at this time
@@ -127,6 +132,11 @@ void GamePacket::_Write(void* data, size_t size)
         m_size = m_writePos + 1;
 }
 
+void GamePacket::_WriteAt(void* data, size_t size, uint16_t position)
+{
+    memcpy(&m_data[position], data, size);
+}
+
 void GamePacket::WriteString(const char* str)
 {
     _Write((void*)str, strlen(str) + 1);
@@ -168,8 +178,25 @@ void GamePacket::WriteInt8(int8_t val)
 
 void GamePacket::WriteFloat(float val)
 {
-    val = (float)htonl((uint32_t)val);
-    _Write(&val, sizeof(float));
+    uint32_t cval = htonl(*(uint32_t*)&val);
+    _Write(&cval, sizeof(float));
+}
+
+void GamePacket::WriteUInt32At(uint32_t val, uint16_t position)
+{
+    val = htonl(val);
+    _WriteAt(&val, sizeof(uint32_t), position);
+}
+
+void GamePacket::WriteUInt16At(uint16_t val, uint16_t position)
+{
+    val = htons(val);
+    _WriteAt(&val, sizeof(uint16_t), position);
+}
+
+void GamePacket::WriteUInt8At(uint8_t val, uint16_t position)
+{
+    _WriteAt(&val, sizeof(uint8_t), position);
 }
 
 void GamePacket::SetData(uint8_t* data, uint16_t size)

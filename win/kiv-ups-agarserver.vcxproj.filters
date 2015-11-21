@@ -58,6 +58,18 @@
     <ClCompile Include="..\src\Gameplay\Room.cpp">
       <Filter>src\Gameplay</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Gameplay\BonusFoodEntity.cpp">
+      <Filter>src\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Gameplay\IdleFoodEntity.cpp">
+      <Filter>src\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Gameplay\TrapEntity.cpp">
+      <Filter>src\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Gameplay\GridSearchers.cpp">
+      <Filter>src\Gameplay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Network\Network.h">
@@ -112,6 +124,12 @@
       <Filter>src\Gameplay</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Gameplay\Room.h">
+      <Filter>src\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Gameplay\Entities.h">
+      <Filter>src\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Gameplay\GridSearchers.h">
       <Filter>src\Gameplay</Filter>
     </ClInclude>
   </ItemGroup>

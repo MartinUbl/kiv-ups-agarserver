@@ -72,9 +72,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\Gameplay\BonusFoodEntity.cpp" />
     <ClCompile Include="..\src\Gameplay\Gameplay.cpp" />
+    <ClCompile Include="..\src\Gameplay\GridSearchers.cpp" />
+    <ClCompile Include="..\src\Gameplay\IdleFoodEntity.cpp" />
     <ClCompile Include="..\src\Gameplay\Player.cpp" />
     <ClCompile Include="..\src\Gameplay\Room.cpp" />
+    <ClCompile Include="..\src\Gameplay\TrapEntity.cpp" />
     <ClCompile Include="..\src\Gameplay\WorldObject.cpp" />
     <ClCompile Include="..\src\Network\GamePacket.cpp" />
     <ClCompile Include="..\src\Network\Network.cpp" />
@@ -88,7 +92,9 @@
     <ClCompile Include="..\src\System\Storage.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Gameplay\Entities.h" />
     <ClInclude Include="..\src\Gameplay\Gameplay.h" />
+    <ClInclude Include="..\src\Gameplay\GridSearchers.h" />
     <ClInclude Include="..\src\Gameplay\Player.h" />
     <ClInclude Include="..\src\Gameplay\Room.h" />
     <ClInclude Include="..\src\Gameplay\WorldObject.h" />
