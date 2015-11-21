@@ -9,6 +9,11 @@
 #include <math.h>
 #include <random>
 
+/* Global position randomizer */
+std::uniform_real_distribution<float> positionRandomizer(0.0f, 1.0f);
+/* Global position randomizer engine */
+std::default_random_engine positionRandomizerEngine;
+
 void Cell::GetCoordPairFor(float x, float y, uint32_t &cellX, uint32_t &cellY)
 {
     cellX = (uint32_t)floor(x / CELL_SIZE_X);
@@ -126,11 +131,8 @@ void Room::PlaceNewPlayer(Player* player)
 {
     // TODO: invent some genious algorithm to determine empty spot on map
 
-    std::uniform_real_distribution<float> rnd(0.0f, 1.0f);
-    std::default_random_engine re;
-
-    //Position npos(m_sizeX * rnd(re), m_sizeY * rnd(re));
-    Position npos(50.0f + rnd(re)*10.0f, 50.0f + rnd(re)*10.0f);
+    //Position npos(m_sizeX * positionRandomizer(positionRandomizerEngine), m_sizeY * positionRandomizer(positionRandomizerEngine));
+    Position npos(50.0f + positionRandomizer(positionRandomizerEngine)*10.0f, 50.0f + positionRandomizer(positionRandomizerEngine)*10.0f);
     player->Relocate(npos, false);
 
     uint32_t cellX, cellY;
@@ -404,24 +406,21 @@ void Room::GenerateRandomContent()
 
     ClearAllObjects();
 
-    std::uniform_real_distribution<float> rnd(0.0f, 1.0f);
-    std::default_random_engine re;
-
     for (i = 0; i < m_cellMap.size(); i++)
     {
         for (j = 0; j < m_cellMap[i].size(); j++)
         {
             // let's say we have 50 eatable food in one cell
             for (k = 0; k < 50; k++)
-                CreateRoomObject<IdleFoodEntity>(i*CELL_SIZE_X + rnd(re)*CELL_SIZE_X, j*CELL_SIZE_Y + rnd(re)*CELL_SIZE_Y);
+                CreateRoomObject<IdleFoodEntity>(i*CELL_SIZE_X + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_X, j*CELL_SIZE_Y + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_Y);
 
             // and 2 bonuses
             for (k = 0; k < 2; k++)
-                CreateRoomObject<BonusFoodEntity>(i*CELL_SIZE_X + rnd(re)*CELL_SIZE_X, j*CELL_SIZE_Y + rnd(re)*CELL_SIZE_Y);
+                CreateRoomObject<BonusFoodEntity>(i*CELL_SIZE_X + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_X, j*CELL_SIZE_Y + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_Y);
 
             // and 2 traps
             for (k = 0; k < 2; k++)
-                CreateRoomObject<TrapEntity>(i*CELL_SIZE_X + rnd(re)*CELL_SIZE_X, j*CELL_SIZE_Y + rnd(re)*CELL_SIZE_Y);
+                CreateRoomObject<TrapEntity>(i*CELL_SIZE_X + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_X, j*CELL_SIZE_Y + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_Y);
         }
     }
 }
