@@ -10,6 +10,7 @@
 #include "sha1.h"
 #include "Version.h"
 #include "Helpers.h"
+#include "GridSearchers.h"
 
 void PacketHandlers::Handle_NULL(Session* sess, GamePacket& packet)
 {
@@ -231,6 +232,10 @@ void PacketHandlers::HandleWorldRequest(Session* sess, GamePacket& packet)
 
     GamePacket resp(SP_NEW_WORLD);
 
+    // write map dimensions
+    resp.WriteFloat(plroom->GetMapSizeX());
+    resp.WriteFloat(plroom->GetMapSizeY());
+
     // build this player update, so the client will know, where we are and how do we look like
     sess->GetPlayer()->BuildCreatePacketBlock(resp);
 
@@ -239,4 +244,91 @@ void PacketHandlers::HandleWorldRequest(Session* sess, GamePacket& packet)
     // writes 4B object count and object create block for each object in range
     plroom->BuildObjectCreateBlock(resp, sess->GetPlayer());
     sNetwork->SendPacket(sess, resp);
+}
+
+void PacketHandlers::HandleMoveStart(Session* sess, GamePacket& packet)
+{
+    // TODO: checks for too fast movement, etc.
+
+    Player* plr = sess->GetPlayer();
+    Room* plroom = sGameplay->GetRoom(plr->GetRoomId());
+    float posX, posY, angle;
+
+    posX = packet.ReadFloat();
+    posY = packet.ReadFloat();
+    angle = packet.ReadFloat();
+
+    plr->Relocate(Position(posX, posY), true);
+    plr->SetMoveAngle(angle);
+    plr->SetMoving(true);
+
+    // broadcast packet about movement start
+    GamePacket movestart(SP_MOVE_START);
+    movestart.WriteUInt32(plr->GetId());
+    movestart.WriteFloat(angle);
+
+    BroadcastPacketCellVisitor visitor(movestart);
+    NearObjectVisibilityGridSearcher gs(plroom, visitor, plr);
+
+    gs.Execute();
+}
+
+void PacketHandlers::HandleMoveStop(Session* sess, GamePacket& packet)
+{
+    Player* plr = sess->GetPlayer();
+    Room* plroom = sGameplay->GetRoom(plr->GetRoomId());
+    float posX, posY;
+
+    posX = packet.ReadFloat();
+    posY = packet.ReadFloat();
+    packet.ReadFloat(); // angle, we don't use it (yet?)
+
+    plr->Relocate(Position(posX, posY), true);
+    plr->SetMoving(false);
+
+    // broadcast packet about movement stop
+    GamePacket movestop(SP_MOVE_STOP);
+    movestop.WriteUInt32(plr->GetId());
+    movestop.WriteFloat(posX);
+    movestop.WriteFloat(posY);
+
+    BroadcastPacketCellVisitor visitor(movestop);
+    NearObjectVisibilityGridSearcher gs(plroom, visitor, plr);
+
+    gs.Execute();
+}
+
+void PacketHandlers::HandleMoveHeartbeat(Session* sess, GamePacket& packet)
+{
+    // TODO: checks for too fast movement, etc.
+
+    Player* plr = sess->GetPlayer();
+    Room* plroom = sGameplay->GetRoom(plr->GetRoomId());
+    float posX, posY;
+
+    posX = packet.ReadFloat();
+    posY = packet.ReadFloat();
+
+    plr->Relocate(Position(posX, posY), true);
+}
+
+void PacketHandlers::HandleMoveDirection(Session* sess, GamePacket& packet)
+{
+    Player* plr = sess->GetPlayer();
+    Room* plroom = sGameplay->GetRoom(plr->GetRoomId());
+    float angle;
+
+    angle = packet.ReadFloat();
+
+    plr->SetMoveAngle(angle);
+
+    // broadcast packet about movement stop
+    GamePacket anglechange(SP_MOVE_DIRECTION);
+    anglechange.WriteUInt32(plr->GetId());
+    anglechange.WriteFloat(angle);
+
+    BroadcastPacketCellVisitor visitor(anglechange);
+    NearObjectVisibilityGridSearcher gs(plroom, visitor, plr);
+
+    gs.Execute();
 }

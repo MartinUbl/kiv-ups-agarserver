@@ -18,6 +18,12 @@ class BaseCellVisitor
 
         /* Visits cell and performs derived action on it */
         virtual void Visit(Cell* cell) = 0;
+
+        /* Sets visitor parameter */
+        void SetParameter(int32_t param);
+
+    protected:
+        int32_t m_parameter;
 };
 
 /* Base for all grid searchers */
@@ -60,6 +66,32 @@ class NearVisibilityGridSearcher : public BaseGridSearcher
 
     private:
         uint32_t m_cellX, m_cellY;
+};
+
+/* Sends destroy to cells player left and create to newly entered cells */
+class VisibilityChangeGridSearcher : public BaseGridSearcher
+{
+    public:
+        VisibilityChangeGridSearcher(Room* room, BaseCellVisitor &visitor, uint32_t oldCellX, uint32_t oldCellY, uint32_t newCellX, uint32_t newCellY) : BaseGridSearcher(room, visitor),
+            m_oldCellX(oldCellX), m_oldCellY(oldCellY), m_newCellX(newCellX), m_newCellY(newCellY) { };
+
+        void Execute() override;
+
+    private:
+        uint32_t m_oldCellX, m_oldCellY, m_newCellX, m_newCellY;
+};
+
+/* Sends destroy to cells player left and create to newly entered cells */
+class CellDiscoveryGridSearcher : public BaseGridSearcher
+{
+    public:
+        CellDiscoveryGridSearcher(Room* room, BaseCellVisitor &visitor, uint32_t oldCellX, uint32_t oldCellY, uint32_t newCellX, uint32_t newCellY) : BaseGridSearcher(room, visitor),
+            m_oldCellX(oldCellX), m_oldCellY(oldCellY), m_newCellX(newCellX), m_newCellY(newCellY) { };
+
+        void Execute() override;
+
+    private:
+        uint32_t m_oldCellX, m_oldCellY, m_newCellX, m_newCellY;
 };
 
 /*********************************
@@ -108,6 +140,19 @@ class BroadcastPacketCellVisitor : public BaseCellVisitor
 
     private:
         GamePacket &m_targetPacket;
+};
+
+/* Visits cell and broadcasts packet to every player in cell depending on its parameter set (see BaseCellVisitor method SetParameter) */
+class MultiplexBroadcastPacketCellVisitor : public BaseCellVisitor
+{
+    public:
+        MultiplexBroadcastPacketCellVisitor(GamePacket &pkt1, GamePacket &pkt2) : m_srcPacket1(pkt1), m_srcPacket2(pkt2) { };
+
+        void Visit(Cell* cell) override;
+
+    private:
+        GamePacket &m_srcPacket1;
+        GamePacket &m_srcPacket2;
 };
 
 #endif

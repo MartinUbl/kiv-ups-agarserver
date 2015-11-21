@@ -60,6 +60,8 @@ class Room
         void RemoveWorldObject(WorldObject* wobj);
         /* Relocates world object between cells if necessary */
         void RelocateWorldObject(WorldObject* wobj, Position &oldpos);
+        /* Relocates player between cells if necessary */
+        void RelocatePlayer(Player* wobj, Position &oldpos);
 
         /* Retrieves room ID */
         uint32_t GetId();
@@ -81,6 +83,11 @@ class Room
         size_t GetGridSizeY();
         /* Retrieves one cell from grid */
         Cell* GetCell(uint32_t x, uint32_t y);
+
+        /* Retrieves map width */
+        float GetMapSizeX();
+        /* Retrieves map height */
+        float GetMapSizeY();
 
     protected:
         /* For now protected, due to unsupported size variability; sets room dimensions */

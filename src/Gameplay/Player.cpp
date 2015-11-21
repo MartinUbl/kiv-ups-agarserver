@@ -45,3 +45,23 @@ void Player::BuildCreatePacketBlock(GamePacket& gp)
     gp.WriteUInt8(m_isMoving ? 1 : 0);
     gp.WriteFloat(m_moveAngle);
 }
+
+void Player::SetMoving(bool state)
+{
+    m_isMoving = state;
+}
+
+bool Player::IsMoving()
+{
+    return m_isMoving;
+}
+
+void Player::SetMoveAngle(float val)
+{
+    m_moveAngle = val;
+}
+
+float Player::GetMoveAngle()
+{
+    return m_moveAngle;
+}

@@ -29,6 +29,10 @@ namespace PacketHandlers
     PACKET_HANDLER(HandleRoomListRequest);
     PACKET_HANDLER(HandleJoinRoomRequest);
     PACKET_HANDLER(HandleWorldRequest);
+    PACKET_HANDLER(HandleMoveStart);
+    PACKET_HANDLER(HandleMoveStop);
+    PACKET_HANDLER(HandleMoveHeartbeat);
+    PACKET_HANDLER(HandleMoveDirection);
 };
 
 /* table of packet handlers; the opcode is also an index here */
@@ -47,10 +51,10 @@ static PacketHandlerStructure PacketHandlerTable[] = {
     { &PacketHandlers::HandleWorldRequest },        // CP_WORLD_REQUEST
     { &PacketHandlers::Handle_ServerSide },         // SP_NEW_PLAYER
     { &PacketHandlers::Handle_ServerSide },         // SP_NEW_WORLD
-    { &PacketHandlers::Handle_NULL },               // CP_MOVE_DIRECTION
-    { &PacketHandlers::Handle_NULL },               // CP_MOVE_START
-    { &PacketHandlers::Handle_NULL },               // CP_MOVE_STOP
-    { &PacketHandlers::Handle_NULL },               // CP_MOVE_HEARTBEAT
+    { &PacketHandlers::HandleMoveDirection },       // CP_MOVE_DIRECTION
+    { &PacketHandlers::HandleMoveStart },           // CP_MOVE_START
+    { &PacketHandlers::HandleMoveStop },            // CP_MOVE_STOP
+    { &PacketHandlers::HandleMoveHeartbeat },       // CP_MOVE_HEARTBEAT
     { &PacketHandlers::Handle_ServerSide },         // SP_MOVE_DIRECTION
     { &PacketHandlers::Handle_ServerSide },         // SP_MOVE_START
     { &PacketHandlers::Handle_ServerSide },         // SP_MOVE_STOP

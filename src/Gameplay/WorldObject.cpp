@@ -50,7 +50,12 @@ void WorldObject::Relocate(Position &pos, bool update)
     {
         Room* myRoom = sGameplay->GetRoom(m_roomId);
         if (myRoom)
-            myRoom->RelocateWorldObject(this, oldPos);
+        {
+            if (m_typeId != OBJECT_TYPE_PLAYER)
+                myRoom->RelocateWorldObject(this, oldPos);
+            else
+                myRoom->RelocatePlayer((Player*)this, oldPos);
+        }
     }
 }
 

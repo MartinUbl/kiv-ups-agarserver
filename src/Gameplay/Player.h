@@ -26,6 +26,16 @@ class Player : public WorldObject
         /* Retrieves player name */
         const char* GetName();
 
+        /* Sets player moving state */
+        void SetMoving(bool state);
+        /* Retrieves player moving state */
+        bool IsMoving();
+
+        /* Sets angle of player movement */
+        void SetMoveAngle(float val);
+        /* Retrieves player move angle */
+        float GetMoveAngle();
+
     protected:
         //
 

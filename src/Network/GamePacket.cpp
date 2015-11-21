@@ -117,9 +117,10 @@ int8_t GamePacket::ReadInt8()
 
 float GamePacket::ReadFloat()
 {
-    float toret;
+    uint32_t toret;
     _Read(&toret, 4);
-    return (float)ntohl((uint32_t)toret);
+    toret = ntohl(toret);
+    return *(float*)&toret;
 }
 
 void GamePacket::_Write(void* data, size_t size)

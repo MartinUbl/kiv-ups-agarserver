@@ -4,6 +4,7 @@
 #include "Opcodes.h"
 #include "Entities.h"
 #include "GridSearchers.h"
+#include "Log.h"
 
 #include <math.h>
 #include <random>
@@ -61,6 +62,16 @@ void Room::SetMapSize(float sizeX, float sizeY)
     }
 }
 
+float Room::GetMapSizeX()
+{
+    return m_sizeX;
+}
+
+float Room::GetMapSizeY()
+{
+    return m_sizeY;
+}
+
 void Room::BroadcastPacket(GamePacket& pkt)
 {
     for (std::list<Player*>::iterator itr = m_playerList.begin(); itr != m_playerList.end(); ++itr)
@@ -91,6 +102,15 @@ void Room::AddPlayer(Player* player)
 
 void Room::RemovePlayer(Player* player)
 {
+    uint32_t cellX, cellY;
+    Position const& pos = player->GetPosition();
+
+    Cell::GetCoordPairFor(pos.x, pos.y, cellX, cellY);
+    // remove player from cellmap
+    if (cellX < m_cellMap.size() && cellY < m_cellMap[0].size())
+        m_cellMap[cellX][cellY]->playerList.remove(player);
+
+    // remove player from room
     for (std::list<Player*>::iterator itr = m_playerList.begin(); itr != m_playerList.end(); ++itr)
     {
         if ((*itr)->GetId() == player->GetId())
@@ -109,8 +129,23 @@ void Room::PlaceNewPlayer(Player* player)
     std::uniform_real_distribution<float> rnd(0.0f, 1.0f);
     std::default_random_engine re;
 
-    Position npos(m_sizeX * rnd(re), m_sizeY * rnd(re));
+    //Position npos(m_sizeX * rnd(re), m_sizeY * rnd(re));
+    Position npos(50.0f + rnd(re)*10.0f, 50.0f + rnd(re)*10.0f);
     player->Relocate(npos, false);
+
+    uint32_t cellX, cellY;
+
+    Cell::GetCoordPairFor(npos.x, npos.y, cellX, cellY);
+
+    // add to cell map
+    m_cellMap[cellX][cellY]->playerList.push_back(player);
+
+    if (!m_playerList.empty())
+    {
+        GamePacket createPacket(SP_NEW_PLAYER);
+        player->BuildCreatePacketBlock(createPacket);
+        BroadcastPacketToNearCells(createPacket, cellX, cellY);
+    }
 }
 
 void Room::AddWorldObject(WorldObject* wobj)
@@ -174,6 +209,95 @@ void Room::RelocateWorldObject(WorldObject* wobj, Position &oldpos)
 
     RemoveWorldObject(wobj);
     AddWorldObject(wobj);
+}
+
+void Room::RelocatePlayer(Player* wobj, Position &oldpos)
+{
+    uint32_t cellX, cellY, cellXNew, cellYNew;
+    uint16_t sizePos;
+    Position const& pos = wobj->GetPosition();
+
+    // retrieve old and new cell coords
+    Cell::GetCoordPairFor(pos.x, pos.y, cellXNew, cellYNew);
+    Cell::GetCoordPairFor(oldpos.x, oldpos.y, cellX, cellY);
+
+    // if relocation between cells is needed, proceed
+    if (cellX != cellXNew || cellY != cellYNew)
+    {
+        if (cellX >= m_cellMap.size() || cellY >= m_cellMap[0].size())
+            return;
+        if (cellXNew >= m_cellMap.size() || cellYNew >= m_cellMap[0].size())
+            return;
+
+        m_cellMap[cellX][cellY]->playerList.remove(wobj);
+        m_cellMap[cellXNew][cellYNew]->playerList.push_back(wobj);
+
+        // At first, let others know about moved player
+
+        // prepare creation packet
+        GamePacket createPacket(SP_NEW_PLAYER);
+        wobj->BuildCreatePacketBlock(createPacket);
+
+        // prepare destruction packet
+        GamePacket deletePacket(SP_DESTROY_OBJECT);
+        deletePacket.WriteUInt32(wobj->GetId());
+        deletePacket.WriteUInt8(0);
+
+        // create multiplexed broadcast packet visitor to send destroy packets to old area and create packets to new area
+        MultiplexBroadcastPacketCellVisitor mpbc(createPacket, deletePacket);
+        // this grid searcher will also check for overlappings, so when "new" and "old" area overlaps, no packet is sent to that area
+        VisibilityChangeGridSearcher vsearch(this, mpbc, cellX, cellY, cellXNew, cellYNew);
+
+        vsearch.Execute();
+
+        // Next, let player know about newly discovered sorroundings
+
+        GamePacket discoveryPacket(SP_UPDATE_WORLD);
+
+        // store position, where we will write object count later
+        sizePos = discoveryPacket.GetWritePos();
+        // for now, write dummy value - zero
+        discoveryPacket.WriteUInt32(0);
+
+        AllPlayerCreateCellVisitor plrvisitor(discoveryPacket);
+        CellDiscoveryGridSearcher plr_cdsearch(this, plrvisitor, cellX, cellY, cellXNew, cellYNew);
+
+        plr_cdsearch.Execute();
+
+        // overwrite zero value with valid count
+        discoveryPacket.WriteUInt32At(plrvisitor.GetCounter(), sizePos);
+
+        // store position, where we will write object count later
+        sizePos = discoveryPacket.GetWritePos();
+        // for now, write dummy value - zero
+        discoveryPacket.WriteUInt32(0);
+
+        AllObjectCreateCellVisitor objvisitor(discoveryPacket);
+        CellDiscoveryGridSearcher obj_cdsearch(this, objvisitor, cellX, cellY, cellXNew, cellYNew);
+
+        obj_cdsearch.Execute();
+
+        // overwrite zero value with valid count
+        discoveryPacket.WriteUInt32At(objvisitor.GetCounter(), sizePos);
+
+        sNetwork->SendPacket(wobj->GetSession(), discoveryPacket);
+    }
+
+    // if the player is moving, send move heartbeat
+    //if (wobj->IsMoving())
+    // actually it does not have to move at all, this will broadcast position change to player sorroundings
+    // regardless of move state
+    {
+        GamePacket heartbeat(SP_MOVE_HEARTBEAT);
+        heartbeat.WriteUInt32(wobj->GetId());
+        heartbeat.WriteFloat(pos.x);
+        heartbeat.WriteFloat(pos.y);
+
+        BroadcastPacketCellVisitor visitor(heartbeat);
+        NearObjectVisibilityGridSearcher gs(this, visitor, wobj);
+
+        gs.Execute();
+    }
 }
 
 size_t Room::GetGridSizeX()
