@@ -215,6 +215,11 @@ uint16_t GamePacket::GetOpcode()
     return m_opcode;
 }
 
+void GamePacket::SetOpcode(uint16_t opcode)
+{
+    m_opcode = opcode;
+}
+
 uint16_t GamePacket::GetSize()
 {
     return m_size;

@@ -25,6 +25,8 @@ class Gameplay
 
         /* Initializes gameplay - creates default rooms, etc. */
         void Init();
+        /* Updates gameplay */
+        void Update(uint32_t diff);
 
         /* Returns first free room ID */
         uint32_t GenerateRoomId();

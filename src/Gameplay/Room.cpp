@@ -77,6 +77,13 @@ float Room::GetMapSizeY()
     return m_sizeY;
 }
 
+void Room::Update(uint32_t diff)
+{
+    // update all players
+    for (std::list<Player*>::iterator itr = m_playerList.begin(); itr != m_playerList.end(); ++itr)
+        (*itr)->Update(diff);
+}
+
 void Room::BroadcastPacket(GamePacket& pkt)
 {
     for (std::list<Player*>::iterator itr = m_playerList.begin(); itr != m_playerList.end(); ++itr)
@@ -105,7 +112,7 @@ void Room::AddPlayer(Player* player)
     player->SetRoomId(m_id);
 }
 
-void Room::RemovePlayer(Player* player)
+void Room::RemovePlayerFromGrid(Player* player)
 {
     uint32_t cellX, cellY;
     Position const& pos = player->GetPosition();
@@ -114,6 +121,11 @@ void Room::RemovePlayer(Player* player)
     // remove player from cellmap
     if (cellX < m_cellMap.size() && cellY < m_cellMap[0].size())
         m_cellMap[cellX][cellY]->playerList.remove(player);
+}
+
+void Room::RemovePlayer(Player* player)
+{
+    RemovePlayerFromGrid(player);
 
     // remove player from room
     for (std::list<Player*>::iterator itr = m_playerList.begin(); itr != m_playerList.end(); ++itr)
@@ -131,8 +143,7 @@ void Room::PlaceNewPlayer(Player* player)
 {
     // TODO: invent some genious algorithm to determine empty spot on map
 
-    //Position npos(m_sizeX * positionRandomizer(positionRandomizerEngine), m_sizeY * positionRandomizer(positionRandomizerEngine));
-    Position npos(50.0f + positionRandomizer(positionRandomizerEngine)*10.0f, 50.0f + positionRandomizer(positionRandomizerEngine)*10.0f);
+    Position npos(m_sizeX * positionRandomizer(positionRandomizerEngine), m_sizeY * positionRandomizer(positionRandomizerEngine));
     player->Relocate(npos, false);
 
     uint32_t cellX, cellY;
@@ -159,7 +170,7 @@ void Room::AddWorldObject(WorldObject* wobj)
     Position const& pos = wobj->GetPosition();
 
     Cell::GetCoordPairFor(pos.x, pos.y, cellX, cellY);
-    if (cellX > m_cellMap.size() || cellY > m_cellMap[0].size())
+    if (cellX >= m_cellMap.size() || cellY >= m_cellMap[0].size())
         return;
 
     m_objectSet.insert(wobj);
@@ -193,7 +204,7 @@ void Room::_RemoveWorldObject(WorldObject* wobj)
     Position const& pos = wobj->GetPosition();
 
     Cell::GetCoordPairFor(pos.x, pos.y, cellX, cellY);
-    if (cellX > m_cellMap.size() || cellY > m_cellMap[0].size())
+    if (cellX >= m_cellMap.size() || cellY >= m_cellMap[0].size())
         return;
 
     m_cellMap[cellX][cellY]->objectList.remove(wobj);
@@ -314,10 +325,10 @@ size_t Room::GetGridSizeY()
 
 Cell* Room::GetCell(uint32_t x, uint32_t y)
 {
-    if (x > m_cellMap.size())
+    if (x >= m_cellMap.size())
         return nullptr;
 
-    if (y > m_cellMap[x].size())
+    if (y >= m_cellMap[x].size())
         return nullptr;
 
     return m_cellMap[x][y];
@@ -423,4 +434,59 @@ void Room::GenerateRandomContent()
                 CreateRoomObject<TrapEntity>(i*CELL_SIZE_X + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_X, j*CELL_SIZE_Y + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_Y);
         }
     }
+}
+
+void Room::EatObject(Player* plr, WorldObject* obj)
+{
+    GamePacket gp(SP_OBJECT_EATEN, 3 * 4);
+    gp.WriteUInt32(obj->GetId());
+    gp.WriteUInt32(plr->GetId());
+
+    int32_t modSize = 0;
+
+    if (obj->GetTypeId() == OBJECT_TYPE_IDLEFOOD)
+        modSize = +2; // dummy value for now
+    if (obj->GetTypeId() == OBJECT_TYPE_PLAYER)
+    {
+        gp.SetOpcode(SP_PLAYER_EATEN);
+        modSize = (uint32_t)(((Player*)obj)->GetSize() * 0.66f);
+    }
+
+    // from certain point, player will gain only half of bonus to size
+    if (plr->GetSize() >= PLAYER_REDUCE_INCOME_SIZE)
+        modSize = modSize / 2;
+
+    gp.WriteInt32(modSize);
+    plr->ModifySize(modSize);
+
+    BroadcastPacketCellVisitor visitor(gp);
+    NearObjectVisibilityGridSearcher gs(this, visitor, obj);
+
+    gs.Execute();
+
+    if (obj->GetTypeId() == OBJECT_TYPE_PLAYER)
+    {
+        sLog->Info("Player %u ate player %u", plr->GetId(), obj->GetId());
+        ((Player*)obj)->SetDead(true);
+        RemovePlayerFromGrid((Player*)obj);
+    }
+    else
+    {
+        sLog->Info("Player %u ate object %u", plr->GetId(), obj->GetId());
+        RemoveWorldObject(obj);
+    }
+}
+
+WorldObject* Room::GetManhattanClosestObject(WorldObject* source)
+{
+    uint32_t sourceSize = 2;
+    if (source->GetTypeId() == OBJECT_TYPE_PLAYER)
+        sourceSize = ((Player*)source)->GetSize();
+
+    ManhattanClosestCellVisitor visitor(source->GetPosition(), sourceSize, source);
+    NearObjectVisibilityGridSearcher gs(this, visitor, source);
+
+    gs.Execute();
+
+    return visitor.GetFoundObject();
 }

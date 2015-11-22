@@ -5,12 +5,13 @@
 #include "Storage.h"
 #include "Log.h"
 #include "Gameplay.h"
+#include "Helpers.h"
 
 #include <thread>
 
 Application::Application()
 {
-    //
+    m_lastUpdate = getMSTime();
 }
 
 Application::~Application()
@@ -44,11 +45,18 @@ bool Application::Init(int argc, char** argv)
 
 int Application::Run()
 {
+    uint32_t diff;
+
     // Main application loop
     while (true)
     {
+        diff = getMSTimeDiff(m_lastUpdate, getMSTime());
+
         sNetwork->Update();
 
+        sGameplay->Update(diff);
+
+        m_lastUpdate = getMSTime();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 

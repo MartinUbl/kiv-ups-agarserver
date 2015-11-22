@@ -5,8 +5,11 @@
 
 #include <set>
 
-#define CELL_SIZE_X 30.0f
-#define CELL_SIZE_Y 30.0f
+#define CELL_SIZE_X 10.0f
+#define CELL_SIZE_Y 10.0f
+
+/* 2 cells to left and 2 to right will be visible */
+#define CELL_VISIBILITY_OFFSET 2
 
 #define MAP_DEFAULT_SIZE_X 500.0f
 #define MAP_DEFAULT_SIZE_Y 500.0f
@@ -42,6 +45,8 @@ class Room
         void AddPlayer(Player* player);
         /* Removes player from room */
         void RemovePlayer(Player* player);
+        /* Removes player from room */
+        void RemovePlayerFromGrid(Player* player);
         /* Finds "empty" spot for new player and places him there */
         void PlaceNewPlayer(Player* player);
         /* Broadcasts packet inside room */
@@ -62,6 +67,11 @@ class Room
         void RelocateWorldObject(WorldObject* wobj, Position &oldpos);
         /* Relocates player between cells if necessary */
         void RelocatePlayer(Player* wobj, Position &oldpos);
+
+        /* Retrieves closest object using manhattan distance */
+        WorldObject* GetManhattanClosestObject(WorldObject* source);
+        /* Player eats object */
+        void EatObject(Player* plr, WorldObject* obj);
 
         /* Retrieves room ID */
         uint32_t GetId();
@@ -88,6 +98,9 @@ class Room
         float GetMapSizeX();
         /* Retrieves map height */
         float GetMapSizeY();
+
+        /* Updates room contents */
+        void Update(uint32_t diff);
 
     protected:
         /* For now protected, due to unsupported size variability; sets room dimensions */

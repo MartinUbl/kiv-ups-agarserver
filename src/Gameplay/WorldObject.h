@@ -29,13 +29,13 @@ struct Position
     Position(float mx, float my) : x(mx), y(my) { };
 
     /* Computes exact distance between two points on plane */
-    float DistanceExact(Position &dst)
+    float DistanceExact(Position const& dst) const
     {
         return sqrt(powf(x-dst.x, 2) + powf(y-dst.y, 2));
     }
 
     /* Computed Manhattan distance between two points on plane */
-    float DistanceManhattan(Position &dst)
+    float DistanceManhattan(Position const& dst) const
     {
         return fabs(x - dst.x) + fabs(y - dst.y);
     }
@@ -64,6 +64,9 @@ class WorldObject
         void SetId(uint32_t id);
         /* Gets player ID */
         uint32_t GetId();
+
+        /* Retrieves object type ID */
+        ObjectTypeId GetTypeId();
 
         /* Builds create packet contents to be sent to players; this method assumes valid opcode has been set */
         virtual void BuildCreatePacketBlock(GamePacket& gp);

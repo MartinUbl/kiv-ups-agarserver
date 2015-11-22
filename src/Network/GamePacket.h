@@ -37,6 +37,8 @@ class GamePacket
         GamePacket(uint16_t opcode, uint16_t size = 0);
         ~GamePacket();
 
+        /* Sets opcode */
+        void SetOpcode(uint16_t opcode);
         /* Sets data, typically when read from socket */
         void SetData(uint8_t* data, uint16_t size);
         /* Retrieves data array pointer */

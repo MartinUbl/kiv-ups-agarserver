@@ -229,6 +229,7 @@ void PacketHandlers::HandleWorldRequest(Session* sess, GamePacket& packet)
     }
 
     plroom->PlaceNewPlayer(sess->GetPlayer());
+    sess->GetPlayer()->SetDead(false);
 
     GamePacket resp(SP_NEW_WORLD);
 

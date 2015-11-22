@@ -18,6 +18,12 @@ void Gameplay::Init()
     CreateRoom(GAME_TYPE_FREEFORALL, 30);
 }
 
+void Gameplay::Update(uint32_t diff)
+{
+    for (std::map<uint32_t, Room*>::iterator itr = m_rooms.begin(); itr != m_rooms.end(); ++itr)
+        itr->second->Update(diff);
+}
+
 uint32_t Gameplay::GenerateRoomId()
 {
     // return next free room ID

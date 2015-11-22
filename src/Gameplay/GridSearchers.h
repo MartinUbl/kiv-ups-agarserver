@@ -155,4 +155,23 @@ class MultiplexBroadcastPacketCellVisitor : public BaseCellVisitor
         GamePacket &m_srcPacket2;
 };
 
+/* Visits cell and broadcasts packet to every player in cell */
+class ManhattanClosestCellVisitor : public BaseCellVisitor
+{
+    public:
+        ManhattanClosestCellVisitor(Position const& src, uint32_t sourceSize, WorldObject* except) : m_sourcePos(src), m_closest(nullptr), m_closestDistance(10000.0f),
+            m_sourceSize(sourceSize), m_exception(except) { };
+
+        void Visit(Cell* cell) override;
+
+        WorldObject* GetFoundObject();
+
+    private:
+        Position const& m_sourcePos;
+        WorldObject* m_exception;
+        uint32_t m_sourceSize;
+        WorldObject* m_closest;
+        float m_closestDistance;
+};
+
 #endif

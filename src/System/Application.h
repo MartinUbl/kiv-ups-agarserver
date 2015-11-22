@@ -20,7 +20,7 @@ class Application
         Application();
 
     private:
-        //
+        uint32_t m_lastUpdate;
 };
 
 #define sApplication Singleton<Application>::getInstance()

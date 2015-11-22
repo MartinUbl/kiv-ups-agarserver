@@ -4,7 +4,15 @@
 #include "Network.h"
 #include "WorldObject.h"
 
+/* Player starting size */
 #define DEFAULT_INITIAL_PLAYER_SIZE 10
+/* Player size calculation coefficient used for calculations and in client also for drawing */
+#define PLAYER_SIZE_CALC_COEF 0.3f/60.0f
+/* Minimum player size considered in calculations */
+#define MIN_PLAYER_CALC_SIZE 40
+
+/* At this point, player will gain only half of all points to size */
+#define PLAYER_REDUCE_INCOME_SIZE 120
 
 class Session;
 
@@ -36,6 +44,19 @@ class Player : public WorldObject
         /* Retrieves player move angle */
         float GetMoveAngle();
 
+        /* Update player record */
+        void Update(uint32_t diff);
+
+        /* Modifies player size */
+        void ModifySize(int32_t mod);
+        /* Retrieves player size */
+        uint32_t GetSize();
+
+        /* Sets dead flag */
+        void SetDead(bool state);
+        /* Is player dead? */
+        bool IsDead();
+
     protected:
         //
 
@@ -53,6 +74,8 @@ class Player : public WorldObject
         bool m_isMoving;
         /* the angle player is moving */
         float m_moveAngle;
+        /* flag for player being dead */
+        bool m_dead;
 };
 
 #endif

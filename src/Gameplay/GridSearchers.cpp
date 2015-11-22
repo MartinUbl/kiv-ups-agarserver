@@ -17,7 +17,7 @@ void NearVisibilityGridSearcher::Execute()
     int32_t tmpX, tmpY;
 
     // iterate one left, center, one right
-    for (i = -1; i <= 1; i++)
+    for (i = -CELL_VISIBILITY_OFFSET; i <= CELL_VISIBILITY_OFFSET; i++)
     {
         tmpX = (int32_t)m_cellX + i;
         // if we are out of grid range, continue to next
@@ -25,7 +25,7 @@ void NearVisibilityGridSearcher::Execute()
             continue;
 
         // iterate one up, center, one down
-        for (j = -1; j <= 1; j++)
+        for (j = -CELL_VISIBILITY_OFFSET; j <= CELL_VISIBILITY_OFFSET; j++)
         {
             tmpY = (int32_t)m_cellY + j;
             // out of grid range
@@ -47,7 +47,7 @@ void NearObjectVisibilityGridSearcher::Execute()
     Cell::GetCoordPairFor(pos.x, pos.y, cellX, cellY);
 
     // iterate one left, center, one right
-    for (i = -1; i <= 1; i++)
+    for (i = -CELL_VISIBILITY_OFFSET; i <= CELL_VISIBILITY_OFFSET; i++)
     {
         tmpX = (int32_t)cellX + i;
         // if we are out of grid range, continue to next
@@ -55,7 +55,7 @@ void NearObjectVisibilityGridSearcher::Execute()
             continue;
 
         // iterate one up, center, one down
-        for (j = -1; j <= 1; j++)
+        for (j = -CELL_VISIBILITY_OFFSET; j <= CELL_VISIBILITY_OFFSET; j++)
         {
             tmpY = (int32_t)cellY + j;
             // out of grid range
@@ -73,15 +73,15 @@ void VisibilityChangeGridSearcher::Execute()
 
     int32_t nrx1, nrx2, nry1, nry2, orx1, orx2, ory1, ory2;
     // store border values of all cell neighbors
-    orx1 = (int32_t)m_oldCellX - 1;
-    orx2 = orx1 + 2;
-    ory1 = (int32_t)m_oldCellY - 1;
-    ory2 = ory1 + 2;
+    orx1 = (int32_t)m_oldCellX - CELL_VISIBILITY_OFFSET;
+    orx2 = orx1 + 2 * CELL_VISIBILITY_OFFSET;
+    ory1 = (int32_t)m_oldCellY - CELL_VISIBILITY_OFFSET;
+    ory2 = ory1 + 2 * CELL_VISIBILITY_OFFSET;
 
-    nrx1 = (int32_t)m_newCellX - 1;
-    nrx2 = nrx1 + 2;
-    nry1 = (int32_t)m_newCellY - 1;
-    nry2 = nry1 + 2;
+    nrx1 = (int32_t)m_newCellX - CELL_VISIBILITY_OFFSET;
+    nrx2 = nrx1 + 2 * CELL_VISIBILITY_OFFSET;
+    nry1 = (int32_t)m_newCellY - CELL_VISIBILITY_OFFSET;
+    nry2 = nry1 + 2 * CELL_VISIBILITY_OFFSET;
 
     // store grid size for future use
     int32_t gsx = m_room->GetGridSizeX() - 1, gsy = m_room->GetGridSizeY() - 1;
@@ -131,15 +131,15 @@ void CellDiscoveryGridSearcher::Execute()
 
     int32_t nrx1, nrx2, nry1, nry2, orx1, orx2, ory1, ory2;
     // store border values of all cell neighbors
-    orx1 = (int32_t)m_oldCellX - 1;
-    orx2 = orx1 + 2;
-    ory1 = (int32_t)m_oldCellY - 1;
-    ory2 = ory1 + 2;
+    orx1 = (int32_t)m_oldCellX - CELL_VISIBILITY_OFFSET;
+    orx2 = orx1 + 2 * CELL_VISIBILITY_OFFSET;
+    ory1 = (int32_t)m_oldCellY - CELL_VISIBILITY_OFFSET;
+    ory2 = ory1 + 2 * CELL_VISIBILITY_OFFSET;
 
-    nrx1 = (int32_t)m_newCellX - 1;
-    nrx2 = nrx1 + 2;
-    nry1 = (int32_t)m_newCellY - 1;
-    nry2 = nry1 + 2;
+    nrx1 = (int32_t)m_newCellX - CELL_VISIBILITY_OFFSET;
+    nrx2 = nrx1 + 2 * CELL_VISIBILITY_OFFSET;
+    nry1 = (int32_t)m_newCellY - CELL_VISIBILITY_OFFSET;
+    nry2 = nry1 + 2 * CELL_VISIBILITY_OFFSET;
 
     // store grid size for future use
     int32_t gsx = m_room->GetGridSizeX() - 1, gsy = m_room->GetGridSizeY() - 1;
@@ -209,4 +209,41 @@ void MultiplexBroadcastPacketCellVisitor::Visit(Cell* cell)
 
     for (std::list<Player*>::iterator itr = cell->playerList.begin(); itr != cell->playerList.end(); ++itr)
         sNetwork->SendPacket((*itr)->GetSession(), tosend);
+}
+
+void ManhattanClosestCellVisitor::Visit(Cell* cell)
+{
+    float dist;
+
+    for (std::list<WorldObject*>::iterator itr = cell->objectList.begin(); itr != cell->objectList.end(); ++itr)
+    {
+        if (*itr == m_exception)
+            continue;
+
+        dist = (*itr)->GetPosition().DistanceManhattan(m_sourcePos);
+        if (dist < m_closestDistance)
+        {
+            m_closestDistance = dist;
+            m_closest = *itr;
+        }
+    }
+
+    for (std::list<Player*>::iterator itr = cell->playerList.begin(); itr != cell->playerList.end(); ++itr)
+    {
+        if (*itr == m_exception)
+            continue;
+
+        // for players, calculate exact distance, since there would be very small amount of players within one cell
+        dist = (*itr)->GetPosition().DistanceExact(m_sourcePos);
+        if (dist - PLAYER_SIZE_CALC_COEF*((*itr)->GetSize() + m_sourceSize) < m_closestDistance)
+        {
+            m_closestDistance = dist;
+            m_closest = *itr;
+        }
+    }
+}
+
+WorldObject* ManhattanClosestCellVisitor::GetFoundObject()
+{
+    return m_closest;
 }

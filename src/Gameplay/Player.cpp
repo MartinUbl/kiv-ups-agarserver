@@ -2,6 +2,9 @@
 #include "Player.h"
 #include "Session.h"
 #include "WorldObject.h"
+#include "Gameplay.h"
+#include "Room.h"
+#include "Opcodes.h"
 
 Player::Player() : WorldObject()
 {
@@ -12,6 +15,7 @@ Player::Player() : WorldObject()
     m_color = 0x00000000;
     m_isMoving = false;
     m_moveAngle = 0.0f;
+    m_dead = false;
 }
 
 Player::~Player()
@@ -64,4 +68,66 @@ void Player::SetMoveAngle(float val)
 float Player::GetMoveAngle()
 {
     return m_moveAngle;
+}
+
+void Player::Update(uint32_t diff)
+{
+    // 3.79 units per 500 ms
+    const float msMove = 3.79f / 500.0f;
+
+    if (IsMoving() && !IsDead())
+    {
+        float dx = cos(GetMoveAngle())*diff*msMove;
+        float dy = sin(GetMoveAngle())*diff*msMove;
+
+        Relocate(Position(m_position.x + dx, m_position.y + dy), true);
+
+        Room* mroom = sGameplay->GetRoom(m_roomId);
+        uint32_t cellX, cellY;
+        Cell::GetCoordPairFor(m_position.x, m_position.y, cellX, cellY);
+        Cell* mcell = mroom->GetCell(cellX, cellY);
+        if (mcell)
+        {
+            WorldObject* closest = mroom->GetManhattanClosestObject(this);
+
+            if (closest)
+            {
+                float closestDist = closest->GetPosition().DistanceExact(m_position);
+                uint32_t compuSize = (m_playerSize > MIN_PLAYER_CALC_SIZE) ? m_playerSize : MIN_PLAYER_CALC_SIZE;
+                uint32_t destSize = (closest->GetTypeId() == OBJECT_TYPE_PLAYER) ? ((Player*)closest)->GetSize() : 2;
+
+                // we need to reach to the center with our border
+                destSize /= 2;
+
+                if (closestDist < (compuSize + destSize)*PLAYER_SIZE_CALC_COEF)
+                {
+                    // bigger player absorbs smaller player
+                    if (closest->GetTypeId() == OBJECT_TYPE_PLAYER && destSize > m_playerSize)
+                        mroom->EatObject((Player*)closest, this);
+                    else
+                        mroom->EatObject(this, closest);
+                }
+            }
+        }
+    }
+}
+
+void Player::ModifySize(int32_t mod)
+{
+    m_playerSize += mod;
+}
+
+uint32_t Player::GetSize()
+{
+    return m_playerSize;
+}
+
+void Player::SetDead(bool state)
+{
+    m_dead = state;
+}
+
+bool Player::IsDead()
+{
+    return m_dead;
 }

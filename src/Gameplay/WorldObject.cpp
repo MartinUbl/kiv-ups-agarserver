@@ -3,6 +3,7 @@
 #include "Gameplay.h"
 #include "GamePacket.h"
 #include "Room.h"
+#include "Log.h"
 
 WorldObject::WorldObject()
 {
@@ -37,6 +38,11 @@ void WorldObject::SetId(uint32_t id)
 uint32_t WorldObject::GetId()
 {
     return m_id;
+}
+
+ObjectTypeId WorldObject::GetTypeId()
+{
+    return m_typeId;
 }
 
 void WorldObject::Relocate(Position &pos, bool update)
