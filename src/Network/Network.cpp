@@ -209,7 +209,7 @@ void Network::UpdateClients()
 
                         sLog->Error("Received malformed packet: opcode %u, size %u, real size %u; disconnecting client", header_buf[0], header_buf[1], result);
                         //shutdown
-                        //close(sess->GetSocket());
+                        //CloseClientSocket(sess->GetSocket());
                         itr = RemoveClient(itr);
                         continue;
                     }
@@ -228,7 +228,7 @@ void Network::UpdateClients()
             else
             {
                 sLog->Error("Received malformed packet: no valid headers sent; disconnecting client");
-                closesocket(sess->GetSocket());
+                CloseClientSocket(sess->GetSocket());
                 itr = RemoveClient(itr);
                 continue;
             }
@@ -249,7 +249,7 @@ void Network::UpdateClients()
             if (error != SOCKETWOULDBLOCK && error != 0)
             {
                 sLog->Error("Unhandled socket error: %u; disconnecting client", error);
-                closesocket(sess->GetSocket());
+                CloseClientSocket(sess->GetSocket());
                 itr = RemoveClient(itr);
                 continue;
             }
