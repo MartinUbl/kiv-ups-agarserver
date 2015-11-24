@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <cstdint>
+#include <cstring>
+#include <cstdio>
 #ifdef _WIN32
 /* it is critical to include winsock2.h before Windows.h due to Windows.h attempt to include old winsock.h header */
 #include <winsock2.h>
