@@ -87,7 +87,8 @@ void Player::Update(uint32_t diff)
         float dx = cos(GetMoveAngle())*diff*msMove;
         float dy = sin(GetMoveAngle())*diff*msMove;
 
-        Relocate(Position(m_position.x + dx, m_position.y + dy), true);
+        Position plpos(m_position.x + dx, m_position.y + dy);
+        Relocate(plpos, true);
 
         Room* mroom = sGameplay->GetRoom(m_roomId);
         uint32_t cellX, cellY;

@@ -7,9 +7,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\dep\sqlite\shell.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\dep\sqlite\sqlite3.c">
       <Filter>src</Filter>
     </ClCompile>

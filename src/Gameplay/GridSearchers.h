@@ -30,14 +30,14 @@ class BaseCellVisitor
 class BaseGridSearcher
 {
     public:
-        BaseGridSearcher(Room* room, BaseCellVisitor &visitor) : m_room(room), m_cellVisitor(visitor) { };
+        BaseGridSearcher(Room* room, BaseCellVisitor *visitor) : m_room(room), m_cellVisitor(visitor) { };
 
         /* Proceeds to search and visit every cell found */
         virtual void Execute() = 0;
 
     protected:
         Room* m_room;
-        BaseCellVisitor& m_cellVisitor;
+        BaseCellVisitor* m_cellVisitor;
 };
 
 /*********************************
@@ -48,7 +48,7 @@ class BaseGridSearcher
 class NearObjectVisibilityGridSearcher : public BaseGridSearcher
 {
     public:
-        NearObjectVisibilityGridSearcher(Room* room, BaseCellVisitor &visitor, WorldObject* subject) : BaseGridSearcher(room, visitor), m_subject(subject) { };
+        NearObjectVisibilityGridSearcher(Room* room, BaseCellVisitor *visitor, WorldObject* subject) : BaseGridSearcher(room, visitor), m_subject(subject) { };
 
         void Execute() override;
 
@@ -60,7 +60,7 @@ class NearObjectVisibilityGridSearcher : public BaseGridSearcher
 class NearVisibilityGridSearcher : public BaseGridSearcher
 {
     public:
-        NearVisibilityGridSearcher(Room* room, BaseCellVisitor &visitor, uint32_t cellX, uint32_t cellY) : BaseGridSearcher(room, visitor), m_cellX(cellX), m_cellY(cellY) { };
+        NearVisibilityGridSearcher(Room* room, BaseCellVisitor *visitor, uint32_t cellX, uint32_t cellY) : BaseGridSearcher(room, visitor), m_cellX(cellX), m_cellY(cellY) { };
 
         void Execute() override;
 
@@ -72,7 +72,7 @@ class NearVisibilityGridSearcher : public BaseGridSearcher
 class VisibilityChangeGridSearcher : public BaseGridSearcher
 {
     public:
-        VisibilityChangeGridSearcher(Room* room, BaseCellVisitor &visitor, uint32_t oldCellX, uint32_t oldCellY, uint32_t newCellX, uint32_t newCellY) : BaseGridSearcher(room, visitor),
+        VisibilityChangeGridSearcher(Room* room, BaseCellVisitor *visitor, uint32_t oldCellX, uint32_t oldCellY, uint32_t newCellX, uint32_t newCellY) : BaseGridSearcher(room, visitor),
             m_oldCellX(oldCellX), m_oldCellY(oldCellY), m_newCellX(newCellX), m_newCellY(newCellY) { };
 
         void Execute() override;
@@ -85,7 +85,7 @@ class VisibilityChangeGridSearcher : public BaseGridSearcher
 class CellDiscoveryGridSearcher : public BaseGridSearcher
 {
     public:
-        CellDiscoveryGridSearcher(Room* room, BaseCellVisitor &visitor, uint32_t oldCellX, uint32_t oldCellY, uint32_t newCellX, uint32_t newCellY) : BaseGridSearcher(room, visitor),
+        CellDiscoveryGridSearcher(Room* room, BaseCellVisitor *visitor, uint32_t oldCellX, uint32_t oldCellY, uint32_t newCellX, uint32_t newCellY) : BaseGridSearcher(room, visitor),
             m_oldCellX(oldCellX), m_oldCellY(oldCellY), m_newCellX(newCellX), m_newCellY(newCellY) { };
 
         void Execute() override;

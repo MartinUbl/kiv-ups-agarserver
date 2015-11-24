@@ -260,7 +260,9 @@ void PacketHandlers::HandleMoveStart(Session* sess, GamePacket& packet)
     posY = packet.ReadFloat();
     angle = packet.ReadFloat();
 
-    plr->Relocate(Position(posX, posY), true);
+    Position plpos(posX, posY);
+
+    plr->Relocate(plpos, true);
     plr->SetMoveAngle(angle);
     plr->SetMoving(true);
 
@@ -270,7 +272,7 @@ void PacketHandlers::HandleMoveStart(Session* sess, GamePacket& packet)
     movestart.WriteFloat(angle);
 
     BroadcastPacketCellVisitor visitor(movestart);
-    NearObjectVisibilityGridSearcher gs(plroom, visitor, plr);
+    NearObjectVisibilityGridSearcher gs(plroom, &visitor, plr);
 
     gs.Execute();
 }
@@ -285,7 +287,9 @@ void PacketHandlers::HandleMoveStop(Session* sess, GamePacket& packet)
     posY = packet.ReadFloat();
     packet.ReadFloat(); // angle, we don't use it (yet?)
 
-    plr->Relocate(Position(posX, posY), true);
+    Position plpos(posX, posY);
+
+    plr->Relocate(plpos, true);
     plr->SetMoving(false);
 
     // broadcast packet about movement stop
@@ -295,7 +299,7 @@ void PacketHandlers::HandleMoveStop(Session* sess, GamePacket& packet)
     movestop.WriteFloat(posY);
 
     BroadcastPacketCellVisitor visitor(movestop);
-    NearObjectVisibilityGridSearcher gs(plroom, visitor, plr);
+    NearObjectVisibilityGridSearcher gs(plroom, &visitor, plr);
 
     gs.Execute();
 }
@@ -311,7 +315,9 @@ void PacketHandlers::HandleMoveHeartbeat(Session* sess, GamePacket& packet)
     posX = packet.ReadFloat();
     posY = packet.ReadFloat();
 
-    plr->Relocate(Position(posX, posY), true);
+    Position plpos(posX, posY);
+
+    plr->Relocate(plpos, true);
 }
 
 void PacketHandlers::HandleMoveDirection(Session* sess, GamePacket& packet)
@@ -330,7 +336,7 @@ void PacketHandlers::HandleMoveDirection(Session* sess, GamePacket& packet)
     anglechange.WriteFloat(angle);
 
     BroadcastPacketCellVisitor visitor(anglechange);
-    NearObjectVisibilityGridSearcher gs(plroom, visitor, plr);
+    NearObjectVisibilityGridSearcher gs(plroom, &visitor, plr);
 
     gs.Execute();
 }

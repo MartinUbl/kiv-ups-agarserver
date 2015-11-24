@@ -8,6 +8,7 @@
 #define _SQLITE3_WRAPPER_H_
 
 #include <vector>
+#include <string>
 
 /* class wrapping result row */
 class SQLiteResultRow : public std::vector<std::string>

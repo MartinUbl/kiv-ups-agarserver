@@ -39,16 +39,16 @@ Config::~Config()
 bool Config::Load(char* configPath)
 {
     FILE* cfile = nullptr;
-    char* cfgfilename = nullptr;
+    std::string cfgfilename;
 
     if (configPath)
         cfgfilename = configPath;
     else
         cfgfilename = CONFIG_PATH MAIN_CONFIG;
 
-    cfile = fopen(cfgfilename, "r");
+    cfile = fopen(cfgfilename.c_str(), "r");
 
-    sLog->Info("Loading main config file %s", cfgfilename);
+    sLog->Info("Loading main config file %s", cfgfilename.c_str());
 
     if (!cfile)
     {

@@ -32,7 +32,7 @@ void NearVisibilityGridSearcher::Execute()
             if (tmpY < 0 || tmpY >= (int32_t)m_room->GetGridSizeY())
                 continue;
 
-            m_cellVisitor.Visit(m_room->GetCell(tmpX, tmpY));
+            m_cellVisitor->Visit(m_room->GetCell(tmpX, tmpY));
         }
     }
 }
@@ -62,7 +62,7 @@ void NearObjectVisibilityGridSearcher::Execute()
             if (tmpY < 0 || tmpY >= (int32_t)m_room->GetGridSizeY())
                 continue;
 
-            m_cellVisitor.Visit(m_room->GetCell(tmpX, tmpY));
+            m_cellVisitor->Visit(m_room->GetCell(tmpX, tmpY));
         }
     }
 }
@@ -97,7 +97,7 @@ void VisibilityChangeGridSearcher::Execute()
     if (nry2 > gsy) nry2 = gsy;
 
     // set destruction mode
-    m_cellVisitor.SetParameter(1);
+    m_cellVisitor->SetParameter(1);
     // destroy for all out of range objects
     for (i = orx1; i <= orx2; i++)
     {
@@ -106,12 +106,12 @@ void VisibilityChangeGridSearcher::Execute()
             if (i >= nrx1 && i <= nrx2 && j >= nry1 && j <= nry2)
                 continue;
 
-            m_cellVisitor.Visit(m_room->GetCell(i, j));
+            m_cellVisitor->Visit(m_room->GetCell(i, j));
         }
     }
 
     // set creation mode
-    m_cellVisitor.SetParameter(0);
+    m_cellVisitor->SetParameter(0);
     // create for newly discovered objects
     for (i = nrx1; i <= nrx2; i++)
     {
@@ -120,7 +120,7 @@ void VisibilityChangeGridSearcher::Execute()
             if (i >= orx1 && i <= orx2 && j >= ory1 && j <= ory2)
                 continue;
 
-            m_cellVisitor.Visit(m_room->GetCell(i, j));
+            m_cellVisitor->Visit(m_room->GetCell(i, j));
         }
     }
 }
@@ -155,7 +155,7 @@ void CellDiscoveryGridSearcher::Execute()
     if (nry2 > gsy) nry2 = gsy;
 
     // set creation mode
-    m_cellVisitor.SetParameter(0);
+    m_cellVisitor->SetParameter(0);
     // destroy all out of range objects
     for (i = nrx1; i <= nrx2; i++)
     {
@@ -164,7 +164,7 @@ void CellDiscoveryGridSearcher::Execute()
             if (i >= orx1 && i <= orx2 && j >= ory1 && j <= ory2)
                 continue;
 
-            m_cellVisitor.Visit(m_room->GetCell(i, j));
+            m_cellVisitor->Visit(m_room->GetCell(i, j));
         }
     }
 }

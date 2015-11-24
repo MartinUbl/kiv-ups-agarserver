@@ -60,13 +60,16 @@ bool Network::Startup()
     }
 
     // retrieve address
-    std::string& bindAddr = sConfig->GetStringValue(CONF_BIND_IP);
+    std::string bindAddr = sConfig->GetStringValue(CONF_BIND_IP);
 
     m_sockAddr.sin_family = AF_INET;
     m_sockAddr.sin_port = htons(m_port);
 
-    //m_sockAddr.sin_addr.s_addr = inet_addr(bindAddr.c_str());
+#ifdef _WIN32
     INET_PTON(AF_INET, bindAddr.c_str(), &m_sockAddr.sin_addr.s_addr);
+#else
+    m_sockAddr.sin_addr.s_addr = inet_addr(bindAddr.c_str());
+#endif
 
     // detect invalid address supplied in config
     if (m_sockAddr.sin_addr.s_addr == INADDR_NONE)
@@ -78,7 +81,7 @@ bool Network::Startup()
     // bind to network interface/address
     if (bind(m_socket, (sockaddr*)&m_sockAddr, sizeof(m_sockAddr)) == -1)
     {
-        sLog->Error("Failed to bind socket to %s:%u", bindAddr.c_str(), m_port);
+        sLog->Error("Failed to bind socket to %s:%u errno: %u", bindAddr.c_str(), m_port, LASTERROR());
         return false;
     }
 
@@ -124,7 +127,7 @@ void Network::AcceptConnections()
     int error;
     Player* plr;
     sockaddr_in accaddr;
-    int addrlen = sizeof(accaddr);
+    socklen_t addrlen = sizeof(accaddr);
     char tmpaddr[INET_ADDRSTRLEN];
 
     // try to accept incoming connection
@@ -145,6 +148,17 @@ void Network::AcceptConnections()
         // create new player, set connection info to his session instance
         plr = new Player();
         plr->GetSession()->SetConnectionInfo(res, accaddr);
+
+#ifdef _WIN32
+        u_long arg = WINSOCK_NONBLOCKING_ARG;
+        if (ioctlsocket(res, FIONBIO, &arg) == SOCKET_ERROR)
+#else
+        int oldFlag = fcntl(m_socket, F_GETFL, 0);
+        if (fcntl(res, F_SETFL, oldFlag | O_NONBLOCK) == -1)
+#endif
+        {
+            sLog->Error("Failed to switch socket to non-blocking mode");
+        }
 
         INET_NTOP(AF_INET, &accaddr.sin_addr, tmpaddr, INET_ADDRSTRLEN);
         sLog->Debug("Accepting connection from: %s", tmpaddr);
@@ -186,7 +200,7 @@ void Network::UpdateClients()
         error = LASTERROR();
 
         // some data available
-        if (result > 0 && error != SOCKETWOULDBLOCK)
+        if (result > 0)
         {
             header_buf[0] = ntohs(header_buf[0]);
             header_buf[1] = ntohs(header_buf[1]);

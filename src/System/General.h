@@ -9,6 +9,8 @@
 /* it is critical to include winsock2.h before Windows.h due to Windows.h attempt to include old winsock.h header */
 #include <winsock2.h>
 #include <Windows.h>
+#else
+#include <arpa/inet.h>
 #endif
 
 /* several paths differs when in debug mode */

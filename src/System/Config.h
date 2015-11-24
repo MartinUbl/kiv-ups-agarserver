@@ -29,11 +29,11 @@ enum ConfigValueType
 /* Union of config option values */
 union ValueUnion
 {
-    char* strval;
+    const char* strval;
     int intval;
 
     ValueUnion() { };
-    ValueUnion(char* c) : strval(c) { };
+    ValueUnion(const char* c) : strval(c) { };
     ValueUnion(int a) : intval(a) { };
 };
 

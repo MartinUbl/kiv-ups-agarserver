@@ -98,7 +98,8 @@ void Cell::BroadcastPacket(GamePacket& pkt)
 
 void Room::BroadcastPacketToNearCells(GamePacket& pkt, uint32_t centerCellX, uint32_t centerCellY)
 {
-    NearVisibilityGridSearcher gs(this, BroadcastPacketCellVisitor(pkt), centerCellX, centerCellY);
+    BroadcastPacketCellVisitor visitor(pkt);
+    NearVisibilityGridSearcher gs(this, &visitor, centerCellX, centerCellY);
 
     gs.Execute();
 }
@@ -259,7 +260,7 @@ void Room::RelocatePlayer(Player* wobj, Position &oldpos)
         // create multiplexed broadcast packet visitor to send destroy packets to old area and create packets to new area
         MultiplexBroadcastPacketCellVisitor mpbc(createPacket, deletePacket);
         // this grid searcher will also check for overlappings, so when "new" and "old" area overlaps, no packet is sent to that area
-        VisibilityChangeGridSearcher vsearch(this, mpbc, cellX, cellY, cellXNew, cellYNew);
+        VisibilityChangeGridSearcher vsearch(this, &mpbc, cellX, cellY, cellXNew, cellYNew);
 
         vsearch.Execute();
 
@@ -273,7 +274,7 @@ void Room::RelocatePlayer(Player* wobj, Position &oldpos)
         discoveryPacket.WriteUInt32(0);
 
         AllPlayerCreateCellVisitor plrvisitor(discoveryPacket);
-        CellDiscoveryGridSearcher plr_cdsearch(this, plrvisitor, cellX, cellY, cellXNew, cellYNew);
+        CellDiscoveryGridSearcher plr_cdsearch(this, &plrvisitor, cellX, cellY, cellXNew, cellYNew);
 
         plr_cdsearch.Execute();
 
@@ -286,7 +287,7 @@ void Room::RelocatePlayer(Player* wobj, Position &oldpos)
         discoveryPacket.WriteUInt32(0);
 
         AllObjectCreateCellVisitor objvisitor(discoveryPacket);
-        CellDiscoveryGridSearcher obj_cdsearch(this, objvisitor, cellX, cellY, cellXNew, cellYNew);
+        CellDiscoveryGridSearcher obj_cdsearch(this, &objvisitor, cellX, cellY, cellXNew, cellYNew);
 
         obj_cdsearch.Execute();
 
@@ -307,7 +308,7 @@ void Room::RelocatePlayer(Player* wobj, Position &oldpos)
         heartbeat.WriteFloat(pos.y);
 
         BroadcastPacketCellVisitor visitor(heartbeat);
-        NearObjectVisibilityGridSearcher gs(this, visitor, wobj);
+        NearObjectVisibilityGridSearcher gs(this, &visitor, wobj);
 
         gs.Execute();
     }
@@ -342,7 +343,7 @@ void Room::BuildObjectCreateBlock(GamePacket& pkt, Player* plr)
     pkt.WriteUInt32(0);
 
     AllObjectCreateCellVisitor visitor(pkt);
-    NearObjectVisibilityGridSearcher gs(this, visitor, plr);
+    NearObjectVisibilityGridSearcher gs(this, &visitor, plr);
 
     gs.Execute();
 
@@ -358,7 +359,7 @@ void Room::BuildPlayerCreateBlock(GamePacket& pkt, Player* plr)
     pkt.WriteUInt32(0);
 
     AllPlayerCreateCellVisitor visitor(pkt);
-    NearObjectVisibilityGridSearcher gs(this, visitor, plr);
+    NearObjectVisibilityGridSearcher gs(this, &visitor, plr);
 
     gs.Execute();
 
@@ -405,7 +406,8 @@ T* Room::CreateRoomObject(float x, float y)
 
     obj->SetId(++m_lastObjectId);
     obj->SetRoomId(GetId());
-    obj->Relocate(Position(x, y), false);
+    Position objpos(x, y);
+    obj->Relocate(objpos, false);
     AddWorldObject(obj);
 
     return obj;
@@ -463,7 +465,7 @@ void Room::EatObject(Player* plr, WorldObject* obj)
     plr->ModifySize(modSize);
 
     BroadcastPacketCellVisitor visitor(gp);
-    NearObjectVisibilityGridSearcher gs(this, visitor, obj);
+    NearObjectVisibilityGridSearcher gs(this, &visitor, obj);
 
     gs.Execute();
 
@@ -487,7 +489,7 @@ WorldObject* Room::GetManhattanClosestObject(WorldObject* source)
         sourceSize = ((Player*)source)->GetSize();
 
     ManhattanClosestCellVisitor visitor(source->GetPosition(), sourceSize, source);
-    NearObjectVisibilityGridSearcher gs(this, visitor, source);
+    NearObjectVisibilityGridSearcher gs(this, &visitor, source);
 
     gs.Execute();
 
