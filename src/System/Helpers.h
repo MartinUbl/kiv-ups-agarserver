@@ -8,6 +8,7 @@ bool IsValidUsername(const char* username);
 #include <Windows.h>
 inline uint32_t getMSTime() { return GetTickCount(); }
 #else
+#include <sys/time.h>
 inline uint32_t getMSTime()
 {
     struct timeval tv;
