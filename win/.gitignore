@@ -3,3 +3,4 @@
 !*.sln
 !*.vcxproj
 !*.vcxproj.filters
+!dep-*

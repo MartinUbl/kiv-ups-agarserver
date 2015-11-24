@@ -28,6 +28,13 @@ Session* Player::GetSession()
     return m_session;
 }
 
+void Player::ResetAttributes()
+{
+    m_playerSize = DEFAULT_INITIAL_PLAYER_SIZE;
+    m_isMoving = false;
+    m_moveAngle = 0.0f;
+}
+
 void Player::SetName(const char* name)
 {
     m_name = std::string(name);
@@ -120,6 +127,11 @@ void Player::ModifySize(int32_t mod)
 uint32_t Player::GetSize()
 {
     return m_playerSize;
+}
+
+void Player::SetSize(uint32_t size)
+{
+    m_playerSize = size;
 }
 
 void Player::SetDead(bool state)

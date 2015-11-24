@@ -452,8 +452,11 @@ void Room::EatObject(Player* plr, WorldObject* obj)
         modSize = (uint32_t)(((Player*)obj)->GetSize() * 0.66f);
     }
 
+    // At some point, the player stops gaining size
+    if (plr->GetSize() >= PLAYER_STOP_INCOME_SIZE)
+        modSize = 0;
     // from certain point, player will gain only half of bonus to size
-    if (plr->GetSize() >= PLAYER_REDUCE_INCOME_SIZE)
+    else if (plr->GetSize() >= PLAYER_REDUCE_INCOME_SIZE)
         modSize = modSize / 2;
 
     gp.WriteInt32(modSize);

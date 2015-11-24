@@ -13,6 +13,8 @@
 
 /* At this point, player will gain only half of all points to size */
 #define PLAYER_REDUCE_INCOME_SIZE 120
+/* At this point, player stops gaining size */
+#define PLAYER_STOP_INCOME_SIZE 1200
 
 class Session;
 
@@ -25,6 +27,9 @@ class Player : public WorldObject
 
         /* Retrieves stored session */
         Session* GetSession();
+
+        /* Resets player attributes to initial state */
+        void ResetAttributes();
 
         /* Overrides object create block building function for player class */
         void BuildCreatePacketBlock(GamePacket& gp) override;
@@ -49,6 +54,8 @@ class Player : public WorldObject
 
         /* Modifies player size */
         void ModifySize(int32_t mod);
+        /* Sets player size */
+        void SetSize(uint32_t size);
         /* Retrieves player size */
         uint32_t GetSize();
 
