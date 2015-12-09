@@ -64,6 +64,9 @@ class Player : public WorldObject
         /* Is player dead? */
         bool IsDead();
 
+        /* mutex lock for player updates */
+        std::mutex updateMutex;
+
     protected:
         //
 

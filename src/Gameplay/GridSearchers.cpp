@@ -13,6 +13,8 @@ void BaseCellVisitor::SetParameter(int32_t param)
 
 void NearVisibilityGridSearcher::Execute()
 {
+    std::unique_lock<std::recursive_mutex> lock(m_room->cellMapLock);
+
     int32_t i, j;
     int32_t tmpX, tmpY;
 
@@ -44,6 +46,8 @@ void NearObjectVisibilityGridSearcher::Execute()
     int32_t tmpX, tmpY;
     Position const& pos = m_subject->GetPosition();
 
+    std::lock_guard<std::recursive_mutex> lock(m_room->cellMapLock);
+
     Cell::GetCoordPairFor(pos.x, pos.y, cellX, cellY);
 
     // iterate one left, center, one right
@@ -72,6 +76,9 @@ void VisibilityChangeGridSearcher::Execute()
     int32_t i, j;
 
     int32_t nrx1, nrx2, nry1, nry2, orx1, orx2, ory1, ory2;
+
+    std::unique_lock<std::recursive_mutex> lock(m_room->cellMapLock);
+
     // store border values of all cell neighbors
     orx1 = (int32_t)m_oldCellX - CELL_VISIBILITY_OFFSET;
     orx2 = orx1 + 2 * CELL_VISIBILITY_OFFSET;
@@ -130,6 +137,9 @@ void CellDiscoveryGridSearcher::Execute()
     int32_t i, j;
 
     int32_t nrx1, nrx2, nry1, nry2, orx1, orx2, ory1, ory2;
+
+    std::unique_lock<std::recursive_mutex> lock(m_room->cellMapLock);
+
     // store border values of all cell neighbors
     orx1 = (int32_t)m_oldCellX - CELL_VISIBILITY_OFFSET;
     orx2 = orx1 + 2 * CELL_VISIBILITY_OFFSET;

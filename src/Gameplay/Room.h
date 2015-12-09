@@ -102,6 +102,9 @@ class Room
         /* Updates room contents */
         void Update(uint32_t diff);
 
+        /* lock for cell map updates */
+        std::recursive_mutex cellMapLock;
+
     protected:
         /* For now protected, due to unsupported size variability; sets room dimensions */
         void SetMapSize(float sizeX, float sizeY);

@@ -9,6 +9,8 @@
 
 #include <thread>
 
+void applicationUpdateWorker();
+
 Application::Application()
 {
     m_lastUpdate = getMSTime();
@@ -38,6 +40,8 @@ bool Application::Init(int argc, char** argv)
 
     sGameplay->Init();
 
+    m_updateThread = new std::thread(applicationUpdateWorker);
+
     sLog->Info("Initialization sequence complete!\n");
 
     return true;
@@ -45,20 +49,39 @@ bool Application::Init(int argc, char** argv)
 
 int Application::Run()
 {
-    uint32_t diff;
-
     // Main application loop
     while (true)
     {
-        diff = getMSTimeDiff(m_lastUpdate, getMSTime());
-
         sNetwork->Update();
 
-        sGameplay->Update(diff);
-
-        m_lastUpdate = getMSTime();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     return 0;
+}
+
+int Application::Update()
+{
+    uint32_t lastUpdate = m_lastUpdate;
+
+    sGameplay->Update(getMSTimeDiff(m_lastUpdate, getMSTime()));
+
+    m_lastUpdate = getMSTime();
+
+    return getMSTimeDiff(lastUpdate, m_lastUpdate);
+}
+
+void applicationUpdateWorker()
+{
+    int delay;
+
+    while (true)
+    {
+        delay = sApplication->Update();
+
+        if (delay > 50)
+            delay = 50;
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(50 - delay + 1));
+    }
 }

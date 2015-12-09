@@ -57,6 +57,8 @@ void WorldObject::Relocate(Position &pos, bool update)
         Room* myRoom = sGameplay->GetRoom(m_roomId);
         if (myRoom)
         {
+            std::unique_lock<std::recursive_mutex> lock(myRoom->cellMapLock);
+
             if (m_typeId != OBJECT_TYPE_PLAYER)
                 myRoom->RelocateWorldObject(this, oldPos);
             else
