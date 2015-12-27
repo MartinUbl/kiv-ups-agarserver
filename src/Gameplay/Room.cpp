@@ -1,4 +1,5 @@
 #include "General.h"
+#include "WorldObject.h"
 #include "Room.h"
 #include "Player.h"
 #include "Opcodes.h"
@@ -20,7 +21,12 @@ void Cell::GetCoordPairFor(float x, float y, uint32_t &cellX, uint32_t &cellY)
     cellY = (uint32_t)floor(y / CELL_SIZE_Y);
 }
 
-Room::Room(uint32_t id, uint32_t gameType, uint32_t capacity)
+bool RespawnTimeComparator::operator()(WorldObject* a, WorldObject* b)
+{
+    return a->GetRespawnTime() > b->GetRespawnTime();
+}
+
+Room::Room(uint32_t id, uint32_t gameType, uint32_t capacity) :m_respawnQueue()
 {
     m_id = id;
     m_gameType = gameType;
@@ -82,6 +88,15 @@ void Room::Update(uint32_t diff)
     // update all players
     for (std::list<Player*>::iterator itr = m_playerList.begin(); itr != m_playerList.end(); ++itr)
         (*itr)->Update(diff);
+
+    // check respawn queue
+    while (!m_respawnQueue.empty() && m_respawnQueue.top()->GetRespawnTime() <= time(nullptr))
+    {
+        WorldObject* toresp = m_respawnQueue.top();
+        m_respawnQueue.pop();
+
+        RespawnObject(toresp);
+    }
 }
 
 void Room::BroadcastPacket(GamePacket& pkt)
@@ -164,6 +179,7 @@ void Room::PlaceNewPlayer(Player* player)
 
 void Room::AddWorldObject(WorldObject* wobj)
 {
+    // do not add same object again
     if (m_objectSet.find(wobj) != m_objectSet.end())
         return;
 
@@ -212,7 +228,8 @@ void Room::_RemoveWorldObject(WorldObject* wobj)
 
     GamePacket remPacket(SP_DESTROY_OBJECT);
     remPacket.WriteUInt32(wobj->GetId());
-    remPacket.WriteUInt8(0); // TODO: destroy reason
+    remPacket.WriteUInt8(wobj->GetPacketTypeId());
+    remPacket.WriteUInt8(0); // "reason" - we don't use this at the moment, maybe in future
     BroadcastPacketToNearCells(remPacket, cellX, cellY);
 }
 
@@ -480,7 +497,21 @@ void Room::EatObject(Player* plr, WorldObject* obj)
     {
         sLog->Debug("Player %u ate object %u", plr->GetId(), obj->GetId());
         RemoveWorldObject(obj);
+        QueueWorldObjectForRespawn(obj);
     }
+}
+
+void Room::QueueWorldObjectForRespawn(WorldObject* obj, uint32_t respawnDelay)
+{
+    obj->SetRespawnTime(time(nullptr) + respawnDelay);
+
+    m_respawnQueue.push(obj);
+}
+
+void Room::RespawnObject(WorldObject* wobj)
+{
+    wobj->SetRespawnTime(0);
+    AddWorldObject(wobj);
 }
 
 WorldObject* Room::GetManhattanClosestObject(WorldObject* source)

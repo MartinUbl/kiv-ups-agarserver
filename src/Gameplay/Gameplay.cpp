@@ -1,6 +1,7 @@
 #include "General.h"
 #include "Gameplay.h"
 #include "Room.h"
+#include "Log.h"
 
 Gameplay::Gameplay() : m_lastRoomId(0)
 {
@@ -15,6 +16,7 @@ Gameplay::~Gameplay()
 void Gameplay::Init()
 {
     // Create default room
+    sLog->Info("Creating default room...");
     CreateRoom(GAME_TYPE_FREEFORALL, 30);
 }
 

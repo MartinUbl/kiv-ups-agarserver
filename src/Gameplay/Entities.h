@@ -5,15 +5,17 @@
 
 class IdleFoodEntity : public WorldObject
 {
-public:
-    IdleFoodEntity();
-    ~IdleFoodEntity();
+    public:
+        IdleFoodEntity();
+        ~IdleFoodEntity();
 
-protected:
-    //
+        void OnEatenByPlayer(Player* plr);
 
-private:
-    //
+    protected:
+        //
+
+    private:
+        //
 };
 
 class BonusFoodEntity : public WorldObject

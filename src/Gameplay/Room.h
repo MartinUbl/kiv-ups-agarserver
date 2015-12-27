@@ -4,6 +4,8 @@
 #include "Network.h"
 
 #include <set>
+#include <functional>
+#include <queue>
 
 #define CELL_SIZE_X 10.0f
 #define CELL_SIZE_Y 10.0f
@@ -11,8 +13,13 @@
 /* 2 cells to left and 2 to right will be visible */
 #define CELL_VISIBILITY_OFFSET 2
 
+/* default map width */
 #define MAP_DEFAULT_SIZE_X 500.0f
+/* default map height */
 #define MAP_DEFAULT_SIZE_Y 500.0f
+
+/* respawn time in seconds */
+#define MAP_OBJECT_RESPAWN_TIME 60
 
 class WorldObject;
 struct Position;
@@ -32,6 +39,11 @@ struct Cell
 
 typedef std::vector<Cell*> CellColumn;
 typedef std::vector<CellColumn> CellMap;
+
+struct RespawnTimeComparator
+{
+    bool operator()(WorldObject* a, WorldObject* b);
+};
 
 /* Class holding information about one game room */
 class Room
@@ -72,6 +84,10 @@ class Room
         WorldObject* GetManhattanClosestObject(WorldObject* source);
         /* Player eats object */
         void EatObject(Player* plr, WorldObject* obj);
+        /* Queues object for respawn */
+        void QueueWorldObjectForRespawn(WorldObject* obj, uint32_t respawnDelay = MAP_OBJECT_RESPAWN_TIME);
+        /* Respawns world object on its place */
+        void RespawnObject(WorldObject* wobj);
 
         /* Retrieves room ID */
         uint32_t GetId();
@@ -126,6 +142,9 @@ class Room
 
         /* Last assigned object ID */
         uint32_t m_lastObjectId;
+
+        /* Respawn queue for respawning world objects */
+        std::priority_queue<WorldObject*, std::vector<WorldObject*>, RespawnTimeComparator> m_respawnQueue;
 
         /* Map dimensions */
         float m_sizeX, m_sizeY;

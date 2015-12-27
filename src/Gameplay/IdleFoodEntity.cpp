@@ -11,3 +11,8 @@ IdleFoodEntity::~IdleFoodEntity()
 {
     //
 }
+
+void IdleFoodEntity::OnEatenByPlayer(Player* plr)
+{
+    //
+}

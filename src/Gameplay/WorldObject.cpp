@@ -50,6 +50,16 @@ uint8_t WorldObject::GetPacketTypeId()
     return (m_typeId == OBJECT_TYPE_PLAYER) ? PACKET_OBJECT_TYPE_PLAYER : PACKET_OBJECT_TYPE_WORLDOBJECT;
 }
 
+void WorldObject::SetRespawnTime(time_t when)
+{
+    m_respawnTime = when;
+}
+
+time_t WorldObject::GetRespawnTime()
+{
+    return m_respawnTime;
+}
+
 void WorldObject::Relocate(Position &pos, bool update)
 {
     Position oldPos(m_position);
