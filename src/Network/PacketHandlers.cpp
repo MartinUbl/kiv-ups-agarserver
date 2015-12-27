@@ -11,6 +11,7 @@
 #include "Version.h"
 #include "Helpers.h"
 #include "GridSearchers.h"
+#include "Log.h"
 
 void PacketHandlers::Handle_NULL(Session* sess, GamePacket& packet)
 {
@@ -206,6 +207,8 @@ void PacketHandlers::HandleJoinRoomRequest(Session* sess, GamePacket& packet)
     //    statusCode = STATUS_ROOMJOIN_NO_SPECTATORS;
     else
     {
+        sess->GetPlayer()->SetUpdateEnabled(false);
+
         rm->AddPlayer(sess->GetPlayer());
         // move player to game stage
         sess->SetConnectionState(CONNECTION_STATE_GAME);
@@ -224,6 +227,8 @@ void PacketHandlers::HandleWorldRequest(Session* sess, GamePacket& packet)
     plroom = sGameplay->GetRoom(sess->GetPlayer()->GetRoomId());
     if (!plroom)
     {
+        sLog->Debug("Player %u is not in any room, kicking!", sess->GetPlayer()->GetId());
+
         // TODO: kick player
         return;
     }
@@ -245,7 +250,10 @@ void PacketHandlers::HandleWorldRequest(Session* sess, GamePacket& packet)
     plroom->BuildPlayerCreateBlock(resp, sess->GetPlayer());
     // writes 4B object count and object create block for each object in range
     plroom->BuildObjectCreateBlock(resp, sess->GetPlayer());
+
     sNetwork->SendPacket(sess, resp);
+
+    sess->GetPlayer()->SetUpdateEnabled(true);
 }
 
 void PacketHandlers::HandleMoveStart(Session* sess, GamePacket& packet)
@@ -339,4 +347,32 @@ void PacketHandlers::HandleMoveDirection(Session* sess, GamePacket& packet)
     NearObjectVisibilityGridSearcher gs(plroom, &visitor, plr);
 
     gs.Execute();
+}
+
+void PacketHandlers::HandleEatRequest(Session* sess, GamePacket& packet)
+{
+    Player* plr = sess->GetPlayer();
+    Room* plroom = sGameplay->GetRoom(plr->GetRoomId());
+
+    uint8_t objType = packet.ReadUInt8();
+    uint32_t objId = packet.ReadUInt32();
+
+    bool isPlayer = (objType == 0);
+
+    ObjectFinderCellVisitor visitor(objId, isPlayer);
+    NearObjectVisibilityGridSearcher gs(plroom, &visitor, plr);
+
+    gs.Execute();
+
+    WorldObject* obj = visitor.GetFoundObject();
+
+    // TODO: maybe some nice "is this possible?" check
+
+    if (obj)
+    {
+        if (isPlayer && ((Player*)obj)->GetSize() > plr->GetSize())
+            plroom->EatObject((Player*)(obj), plr);
+        else
+            plroom->EatObject(plr, obj);
+    }
 }

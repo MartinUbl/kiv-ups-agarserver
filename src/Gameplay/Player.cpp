@@ -12,10 +12,12 @@ Player::Player() : WorldObject()
     m_session = new Session(this);
 
     m_playerSize = DEFAULT_INITIAL_PLAYER_SIZE;
+    m_playerSpeed = MOVE_MS_COEF_MAX;
     m_color = 0x00000000;
     m_isMoving = false;
     m_moveAngle = 0.0f;
     m_dead = false;
+    m_updateEnabled = false;
 }
 
 Player::~Player()
@@ -79,50 +81,22 @@ float Player::GetMoveAngle()
 
 void Player::Update(uint32_t diff)
 {
-    // 3.79 units per 500 ms
-    const float msMove = 3.79f / 500.0f;
+    if (!IsUpdateEnabled())
+        return;
 
     if (IsMoving() && !IsDead())
     {
-        float dx = cos(GetMoveAngle())*diff*msMove;
-        float dy = sin(GetMoveAngle())*diff*msMove;
+        float dx = cos(GetMoveAngle())*diff*m_playerSpeed;
+        float dy = sin(GetMoveAngle())*diff*m_playerSpeed;
 
         Position plpos(m_position.x + dx, m_position.y + dy);
         Relocate(plpos, true);
-
-        Room* mroom = sGameplay->GetRoom(m_roomId);
-        uint32_t cellX, cellY;
-        Cell::GetCoordPairFor(m_position.x, m_position.y, cellX, cellY);
-        Cell* mcell = mroom->GetCell(cellX, cellY);
-        if (mcell)
-        {
-            WorldObject* closest = mroom->GetManhattanClosestObject(this);
-
-            if (closest)
-            {
-                float closestDist = closest->GetPosition().DistanceExact(m_position);
-                uint32_t compuSize = (m_playerSize > MIN_PLAYER_CALC_SIZE) ? m_playerSize : MIN_PLAYER_CALC_SIZE;
-                uint32_t destSize = (closest->GetTypeId() == OBJECT_TYPE_PLAYER) ? ((Player*)closest)->GetSize() : 2;
-
-                // we need to reach to the center with our border
-                destSize /= 2;
-
-                if (closestDist < (compuSize + destSize)*PLAYER_SIZE_CALC_COEF)
-                {
-                    // bigger player absorbs smaller player
-                    if (closest->GetTypeId() == OBJECT_TYPE_PLAYER && destSize > m_playerSize)
-                        mroom->EatObject((Player*)closest, this);
-                    else
-                        mroom->EatObject(this, closest);
-                }
-            }
-        }
     }
 }
 
 void Player::ModifySize(int32_t mod)
 {
-    m_playerSize += mod;
+    SetSize(m_playerSize + mod);
 }
 
 uint32_t Player::GetSize()
@@ -133,6 +107,13 @@ uint32_t Player::GetSize()
 void Player::SetSize(uint32_t size)
 {
     m_playerSize = size;
+
+    if (m_playerSize <= 120)
+        m_playerSpeed = MOVE_MS_COEF_MAX;
+    else if (m_playerSize >= 1200)
+        m_playerSpeed = MOVE_MS_COEF_MIN;
+    else
+        m_playerSpeed = -((int32_t)m_playerSize - 540)*(MOVE_MS_COEF_MIN / 420) + ((MOVE_MS_COEF_MAX + MOVE_MS_COEF_MIN) / 2.0f);
 }
 
 void Player::SetDead(bool state)
@@ -143,4 +124,14 @@ void Player::SetDead(bool state)
 bool Player::IsDead()
 {
     return m_dead;
+}
+
+void Player::SetUpdateEnabled(bool state)
+{
+    m_updateEnabled = state;
+}
+
+bool Player::IsUpdateEnabled()
+{
+    return m_updateEnabled;
 }

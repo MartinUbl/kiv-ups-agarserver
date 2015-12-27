@@ -50,6 +50,7 @@ enum Opcodes
     SP_CHAT_MSG                 = 0x22,
     SP_DESTROY_OBJECT           = 0x23,
     SP_UPDATE_WORLD             = 0x24,
+    CP_EAT_REQUEST              = 0x25,
 
     OPCODE_MAX
 };

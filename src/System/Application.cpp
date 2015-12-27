@@ -79,9 +79,9 @@ void applicationUpdateWorker()
     {
         delay = sApplication->Update();
 
-        if (delay > 50)
-            delay = 50;
+        if (delay > 100)
+            delay = 100;
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(50 - delay + 1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100 - delay + 1));
     }
 }

@@ -213,6 +213,36 @@ void BroadcastPacketCellVisitor::Visit(Cell* cell)
         sNetwork->SendPacket((*itr)->GetSession(), m_targetPacket);
 }
 
+void ObjectFinderCellVisitor::Visit(Cell* cell)
+{
+    // already found, nothing to do
+    if (m_object)
+        return;
+
+    if (m_isPlayer)
+    {
+        for (std::list<Player*>::iterator itr = cell->playerList.begin(); itr != cell->playerList.end(); ++itr)
+        {
+            if ((*itr)->GetId() == m_objectId)
+            {
+                m_object = (*itr);
+                return;
+            }
+        }
+    }
+    else
+    {
+        for (std::list<WorldObject*>::iterator itr = cell->objectList.begin(); itr != cell->objectList.end(); ++itr)
+        {
+            if ((*itr)->GetId() == m_objectId)
+            {
+                m_object = (*itr);
+                return;
+            }
+        }
+    }
+}
+
 void MultiplexBroadcastPacketCellVisitor::Visit(Cell* cell)
 {
     GamePacket &tosend = (m_parameter == 0) ? m_srcPacket1 : m_srcPacket2;

@@ -423,16 +423,16 @@ void Room::GenerateRandomContent()
     {
         for (j = 0; j < m_cellMap[i].size(); j++)
         {
-            // let's say we have 50 eatable food in one cell
-            for (k = 0; k < 50; k++)
+            // let's say we have 20 eatable food in one cell
+            for (k = 0; k < 20; k++)
                 CreateRoomObject<IdleFoodEntity>(i*CELL_SIZE_X + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_X, j*CELL_SIZE_Y + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_Y);
 
-            // and 2 bonuses
-            for (k = 0; k < 2; k++)
+            // and 1 bonus
+            for (k = 0; k < 1; k++)
                 CreateRoomObject<BonusFoodEntity>(i*CELL_SIZE_X + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_X, j*CELL_SIZE_Y + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_Y);
 
-            // and 2 traps
-            for (k = 0; k < 2; k++)
+            // and 1 trap
+            for (k = 0; k < 1; k++)
                 CreateRoomObject<TrapEntity>(i*CELL_SIZE_X + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_X, j*CELL_SIZE_Y + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_Y);
         }
     }
@@ -471,13 +471,13 @@ void Room::EatObject(Player* plr, WorldObject* obj)
 
     if (obj->GetTypeId() == OBJECT_TYPE_PLAYER)
     {
-        sLog->Info("Player %u ate player %u", plr->GetId(), obj->GetId());
+        sLog->Debug("Player %u ate player %u", plr->GetId(), obj->GetId());
         ((Player*)obj)->SetDead(true);
         RemovePlayerFromGrid((Player*)obj);
     }
     else
     {
-        sLog->Info("Player %u ate object %u", plr->GetId(), obj->GetId());
+        sLog->Debug("Player %u ate object %u", plr->GetId(), obj->GetId());
         RemoveWorldObject(obj);
     }
 }

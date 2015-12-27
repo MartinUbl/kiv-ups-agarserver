@@ -33,6 +33,7 @@ namespace PacketHandlers
     PACKET_HANDLER(HandleMoveStop);
     PACKET_HANDLER(HandleMoveHeartbeat);
     PACKET_HANDLER(HandleMoveDirection);
+    PACKET_HANDLER(HandleEatRequest);
 };
 
 /* table of packet handlers; the opcode is also an index here */
@@ -72,6 +73,9 @@ static PacketHandlerStructure PacketHandlerTable[] = {
     { &PacketHandlers::Handle_ServerSide },         // SP_STATS_RESPONSE
     { &PacketHandlers::Handle_NULL },               // CP_CHAT_MSG
     { &PacketHandlers::Handle_ServerSide },         // SP_CHAT_MSG
+    { &PacketHandlers::Handle_ServerSide },         // SP_DESTROY_OBJECT
+    { &PacketHandlers::Handle_ServerSide },         // SP_UPDATE_WORLD
+    { &PacketHandlers::HandleEatRequest },          // CP_EAT_REQUEST
 };
 
 #endif

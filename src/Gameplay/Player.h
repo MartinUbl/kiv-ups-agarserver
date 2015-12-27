@@ -11,6 +11,11 @@
 /* Minimum player size considered in calculations */
 #define MIN_PLAYER_CALC_SIZE 40
 
+/* Maximum movement speed (per ms)*/
+#define MOVE_MS_COEF_MAX 0.0065f
+/* Minimum movement speed (per ms)*/
+#define MOVE_MS_COEF_MIN 0.0025f
+
 /* At this point, player will gain only half of all points to size */
 #define PLAYER_REDUCE_INCOME_SIZE 120
 /* At this point, player stops gaining size */
@@ -64,6 +69,11 @@ class Player : public WorldObject
         /* Is player dead? */
         bool IsDead();
 
+        /* Sets enable update flag */
+        void SetUpdateEnabled(bool state);
+        /* Are updates enabled? */
+        bool IsUpdateEnabled();
+
         /* mutex lock for player updates */
         std::mutex updateMutex;
 
@@ -78,6 +88,8 @@ class Player : public WorldObject
         std::string m_name;
         /* player entity size */
         uint32_t m_playerSize;
+        /* player move speed */
+        float m_playerSpeed;
         /* player color in 0RGB format (highest byte is all zero) */
         uint32_t m_color;
         /* moving flag for player */
@@ -86,6 +98,8 @@ class Player : public WorldObject
         float m_moveAngle;
         /* flag for player being dead */
         bool m_dead;
+        /* are updates enabled? */
+        bool m_updateEnabled;
 };
 
 #endif

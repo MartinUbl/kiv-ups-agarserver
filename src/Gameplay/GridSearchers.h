@@ -142,6 +142,22 @@ class BroadcastPacketCellVisitor : public BaseCellVisitor
         GamePacket &m_targetPacket;
 };
 
+/* Visits cell and broadcasts packet to every player in cell */
+class ObjectFinderCellVisitor : public BaseCellVisitor
+{
+    public:
+        ObjectFinderCellVisitor(uint32_t objectId, bool isPlayer) : m_isPlayer(isPlayer), m_objectId(objectId), m_object(nullptr) {};
+
+        void Visit(Cell* cell) override;
+
+        WorldObject* GetFoundObject() { return m_object; };
+
+    private:
+        bool m_isPlayer;
+        uint32_t m_objectId;
+        WorldObject* m_object;
+};
+
 /* Visits cell and broadcasts packet to every player in cell depending on its parameter set (see BaseCellVisitor method SetParameter) */
 class MultiplexBroadcastPacketCellVisitor : public BaseCellVisitor
 {

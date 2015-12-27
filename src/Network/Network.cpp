@@ -311,6 +311,8 @@ void Network::SendPacket(SOCK socket, GamePacket &pkt)
     uint16_t op, sz;
     uint8_t* tosend = new uint8_t[GAMEPACKET_HEADER_SIZE + pkt.GetSize()];
 
+    //sLog->Debug("NETWORK: Sending packet %u", pkt.GetOpcode());
+
     op = htons(pkt.GetOpcode());
     sz = htons(pkt.GetSize());
 
