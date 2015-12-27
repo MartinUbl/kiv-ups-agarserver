@@ -115,6 +115,16 @@ class Room
         /* Retrieves map height */
         float GetMapSizeY();
 
+        /* Sets room name */
+        void SetRoomName(const char* name);
+        /* Retrieves room name */
+        const char* GetRoomName();
+
+        /* Sets "default" state of this room */
+        void SetAsDefault(bool state);
+        /* Is room listed as "default" ? */
+        bool IsDefault();
+
         /* Updates room contents */
         void Update(uint32_t diff);
 
@@ -139,6 +149,11 @@ class Room
         std::list<Player*> m_playerList;
         /* List of all non-player objects */
         std::set<WorldObject*> m_objectSet;
+
+        /* Room name */
+        std::string m_roomName;
+        /* Is room default? (allow empty state) */
+        bool m_isDefault;
 
         /* Last assigned object ID */
         uint32_t m_lastObjectId;

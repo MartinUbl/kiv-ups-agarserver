@@ -178,6 +178,7 @@ void PacketHandlers::HandleRoomListRequest(Session* sess, GamePacket& packet)
         resp.WriteUInt8(tmp->GetGameType());
         resp.WriteUInt8(tmp->GetPlayerCount());
         resp.WriteUInt8(tmp->GetCapacity());
+        resp.WriteString(tmp->GetRoomName());
     }
     sNetwork->SendPacket(sess, resp);
 }

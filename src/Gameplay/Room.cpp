@@ -26,11 +26,12 @@ bool RespawnTimeComparator::operator()(WorldObject* a, WorldObject* b)
     return a->GetRespawnTime() > b->GetRespawnTime();
 }
 
-Room::Room(uint32_t id, uint32_t gameType, uint32_t capacity) :m_respawnQueue()
+Room::Room(uint32_t id, uint32_t gameType, uint32_t capacity) : m_roomName("Unnamed room")
 {
     m_id = id;
     m_gameType = gameType;
     m_capacity = capacity;
+    m_isDefault = false;
 
     m_lastObjectId = 0;
 
@@ -81,6 +82,26 @@ float Room::GetMapSizeX()
 float Room::GetMapSizeY()
 {
     return m_sizeY;
+}
+
+void Room::SetRoomName(const char* name)
+{
+    m_roomName = name;
+}
+
+const char* Room::GetRoomName()
+{
+    return m_roomName.c_str();
+}
+
+void Room::SetAsDefault(bool state)
+{
+    m_isDefault = state;
+}
+
+bool Room::IsDefault()
+{
+    return m_isDefault;
 }
 
 void Room::Update(uint32_t diff)

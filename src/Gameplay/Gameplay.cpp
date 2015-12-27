@@ -17,7 +17,13 @@ void Gameplay::Init()
 {
     // Create default room
     sLog->Info("Creating default room...");
-    CreateRoom(GAME_TYPE_FREEFORALL, 30);
+
+    Room* rm = CreateRoom(GAME_TYPE_FREEFORALL, 30);
+    if (rm)
+    {
+        rm->SetRoomName("Default room");
+        rm->SetAsDefault(true);
+    }
 }
 
 void Gameplay::Update(uint32_t diff)
