@@ -357,7 +357,7 @@ void PacketHandlers::HandleEatRequest(Session* sess, GamePacket& packet)
     uint8_t objType = packet.ReadUInt8();
     uint32_t objId = packet.ReadUInt32();
 
-    bool isPlayer = (objType == 0);
+    bool isPlayer = (objType == PACKET_OBJECT_TYPE_PLAYER);
 
     ObjectFinderCellVisitor visitor(objId, isPlayer);
     NearObjectVisibilityGridSearcher gs(plroom, &visitor, plr);

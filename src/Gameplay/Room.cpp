@@ -255,7 +255,8 @@ void Room::RelocatePlayer(Player* wobj, Position &oldpos)
         // prepare destruction packet
         GamePacket deletePacket(SP_DESTROY_OBJECT);
         deletePacket.WriteUInt32(wobj->GetId());
-        deletePacket.WriteUInt8(0);
+        deletePacket.WriteUInt8(wobj->GetPacketTypeId());
+        deletePacket.WriteUInt8(0); // "reason" - we don't use that for now, maybe in future to show i.e. some animation, etc.
 
         // create multiplexed broadcast packet visitor to send destroy packets to old area and create packets to new area
         MultiplexBroadcastPacketCellVisitor mpbc(createPacket, deletePacket);

@@ -45,6 +45,11 @@ ObjectTypeId WorldObject::GetTypeId()
     return m_typeId;
 }
 
+uint8_t WorldObject::GetPacketTypeId()
+{
+    return (m_typeId == OBJECT_TYPE_PLAYER) ? PACKET_OBJECT_TYPE_PLAYER : PACKET_OBJECT_TYPE_WORLDOBJECT;
+}
+
 void WorldObject::Relocate(Position &pos, bool update)
 {
     Position oldPos(m_position);

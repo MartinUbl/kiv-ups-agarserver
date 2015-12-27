@@ -15,6 +15,9 @@ enum ObjectTypeId
     MAX_OBJECT_TYPE
 };
 
+#define PACKET_OBJECT_TYPE_PLAYER 0
+#define PACKET_OBJECT_TYPE_WORLDOBJECT 1
+
 /* Wrapper structure for position in plane */
 struct Position
 {
@@ -67,6 +70,9 @@ class WorldObject
 
         /* Retrieves object type ID */
         ObjectTypeId GetTypeId();
+
+        /* Retrieves packet-oriented object type ID */
+        uint8_t GetPacketTypeId();
 
         /* Builds create packet contents to be sent to players; this method assumes valid opcode has been set */
         virtual void BuildCreatePacketBlock(GamePacket& gp);
