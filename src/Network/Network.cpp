@@ -145,9 +145,11 @@ void Network::AcceptConnections()
     }
     else // this means we just accepted valid connection
     {
+        INET_NTOP(AF_INET, &accaddr.sin_addr, tmpaddr, INET_ADDRSTRLEN);
+
         // create new player, set connection info to his session instance
         plr = new Player();
-        plr->GetSession()->SetConnectionInfo(res, accaddr);
+        plr->GetSession()->SetConnectionInfo(res, accaddr, tmpaddr);
 
 #ifdef _WIN32
         u_long arg = WINSOCK_NONBLOCKING_ARG;
@@ -160,7 +162,6 @@ void Network::AcceptConnections()
             sLog->Error("Failed to switch socket to non-blocking mode");
         }
 
-        INET_NTOP(AF_INET, &accaddr.sin_addr, tmpaddr, INET_ADDRSTRLEN);
         sLog->Debug("Accepting connection from: %s", tmpaddr);
 
         // insert into client list
@@ -187,13 +188,21 @@ void Network::UpdateClients()
     Session* sess;
     uint8_t* recvdata;
     GamePacket pkt;
-    char tmpaddr[INET_ADDRSTRLEN];
 
     // go through all clients
     for (std::list<ClientRecord*>::iterator itr = m_clients.begin(); itr != m_clients.end(); )
     {
         plr = (*itr)->player;
         sess = plr->GetSession();
+
+        // if the session is marked as expired, disconnect client
+        if (sess->IsMarkedAsExpired())
+        {
+            sLog->Debug("Client session (IP: %s) expired, disconnecting", sess->GetRemoteAddr());
+            CloseClientSocket(sess->GetSocket());
+            itr = RemoveClient(itr);
+            continue;
+        }
 
         // try to read from socket assigned to client
         result = recv(sess->GetSocket(), (char*)&header_buf, GAMEPACKET_HEADER_SIZE, 0);
@@ -221,8 +230,7 @@ void Network::UpdateClients()
                     {
                         delete[] recvdata;
 
-                        sLog->Error("Received malformed packet: opcode %u, size %u, real size %u; disconnecting client", header_buf[0], header_buf[1], result);
-                        //shutdown
+                        sLog->Error("Received malformed packet: opcode %u, size %u, real size %u; disconnecting client (IP: %s)", header_buf[0], header_buf[1], result, sess->GetRemoteAddr());
                         //CloseClientSocket(sess->GetSocket());
                         itr = RemoveClient(itr);
                         continue;
@@ -241,17 +249,16 @@ void Network::UpdateClients()
             }
             else
             {
-                sLog->Error("Received malformed packet: no valid headers sent; disconnecting client");
+                sLog->Error("Received malformed packet: no valid headers sent; disconnecting client (IP: %s)", sess->GetRemoteAddr());
                 CloseClientSocket(sess->GetSocket());
                 itr = RemoveClient(itr);
                 continue;
             }
         }
-        // connection closed by remote endpoint (either controlled or errorneous scenario)
+        // connection closed by remote endpoint (either controlled or errorneous scenario, but initiated by client)
         else if (error == SOCKETCONNRESET)
         {
-            INET_NTOP(AF_INET, (void*)&sess->GetSockAddr().sin_addr, tmpaddr, INET_ADDRSTRLEN);
-            sLog->Debug("Client disconnected: %s", tmpaddr);
+            sLog->Debug("Client (IP: %s) disconnected", sess->GetRemoteAddr());
             itr = RemoveClient(itr);
             continue;
         }
@@ -262,7 +269,7 @@ void Network::UpdateClients()
             // that we have some error set)
             if (error != SOCKETWOULDBLOCK && error != 0)
             {
-                sLog->Error("Unhandled socket error: %u; disconnecting client", error);
+                sLog->Error("Unhandled socket error: %u; disconnecting client (IP: %s)", error, sess->GetRemoteAddr());
                 CloseClientSocket(sess->GetSocket());
                 itr = RemoveClient(itr);
                 continue;
