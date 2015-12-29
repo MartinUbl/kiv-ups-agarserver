@@ -32,6 +32,8 @@ class Player : public WorldObject
 
         /* Retrieves stored session */
         Session* GetSession();
+        /* Overrides session, i.e. when restoring state after disconnection */
+        void OverrideSession(Session* sess);
 
         /* Resets player attributes to initial state */
         void ResetAttributes();

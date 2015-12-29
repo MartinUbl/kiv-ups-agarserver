@@ -30,6 +30,13 @@ Session* Player::GetSession()
     return m_session;
 }
 
+void Player::OverrideSession(Session* sess)
+{
+    // old session will be handled elsewhere, and should be destroyed only by network thread
+
+    m_session = sess;
+}
+
 void Player::ResetAttributes()
 {
     m_playerSize = DEFAULT_INITIAL_PLAYER_SIZE;
@@ -56,6 +63,7 @@ void Player::BuildCreatePacketBlock(GamePacket& gp)
     gp.WriteFloat(m_position.y);
     gp.WriteUInt32(m_color);
     gp.WriteUInt8(m_isMoving ? 1 : 0);
+    gp.WriteUInt8(m_dead ? 1 : 0);
     gp.WriteFloat(m_moveAngle);
 }
 
@@ -81,6 +89,8 @@ float Player::GetMoveAngle()
 
 void Player::Update(uint32_t diff)
 {
+    m_session->Update(diff);
+
     if (!IsUpdateEnabled())
         return;
 

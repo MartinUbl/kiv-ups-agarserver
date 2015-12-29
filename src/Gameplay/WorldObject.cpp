@@ -67,17 +67,32 @@ void WorldObject::Relocate(Position &pos, bool update)
     m_position.x = pos.x;
     m_position.y = pos.y;
 
-    if (m_roomId && update)
+    if (m_roomId)
     {
         Room* myRoom = sGameplay->GetRoom(m_roomId);
         if (myRoom)
         {
-            std::unique_lock<std::recursive_mutex> lock(myRoom->cellMapLock);
+            // lower bounds
+            if (m_position.x < 0)
+                m_position.x = 0;
+            if (m_position.y < 0)
+                m_position.y = 0;
 
-            if (m_typeId != OBJECT_TYPE_PLAYER)
-                myRoom->RelocateWorldObject(this, oldPos);
-            else
-                myRoom->RelocatePlayer((Player*)this, oldPos);
+            // higher bounds
+            if (m_position.x > myRoom->GetMapSizeX())
+                m_position.x = myRoom->GetMapSizeX();
+            if (m_position.y > myRoom->GetMapSizeY())
+                m_position.y = myRoom->GetMapSizeY();
+
+            if (update)
+            {
+                std::unique_lock<std::recursive_mutex> lock(myRoom->cellMapLock);
+
+                if (m_typeId != OBJECT_TYPE_PLAYER)
+                    myRoom->RelocateWorldObject(this, oldPos);
+                else
+                    myRoom->RelocatePlayer((Player*)this, oldPos);
+            }
         }
     }
 }

@@ -23,6 +23,16 @@ void PacketHandlers::Handle_ServerSide(Session* sess, GamePacket& packet)
     // This should never happen - we should never receive server-to-client packet
 }
 
+void PacketHandlers::HandlePong(Session* sess, GamePacket& packet)
+{
+    sess->SignalLatencyMeasure();
+
+    GamePacket resp(SP_PING_PONG);
+    resp.WriteUInt32(sess->GetLatency());
+
+    sNetwork->SendPacket(sess, resp);
+}
+
 void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
 {
     std::string username, password;
@@ -63,6 +73,11 @@ void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
             statusCode = STATUS_LOGIN_WRONG_PASSWORD;
         else
         {
+            // if there's another user logged in to that account, kick him
+            Session* existing = sNetwork->FindSessionByPlayerId(user->id);
+            if (existing)
+                existing->Kick();
+
             sess->GetPlayer()->SetId(user->id);
             sess->GetPlayer()->SetName(user->username);
             playerId = (uint32_t)user->id;
@@ -78,6 +93,9 @@ void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
         // move connection state to "lobby" after logging in
         sess->SetConnectionState(CONNECTION_STATE_LOBBY);
     }
+
+    // write session key in case of session restore
+    resp.WriteString(sess->CreateSessionKey());
 
     sNetwork->SendPacket(sess, resp);
     delete user;
@@ -153,6 +171,76 @@ void PacketHandlers::HandleRegisterRequest(Session* sess, GamePacket& packet)
         // move connection state to "lobby" after registering
         sess->SetConnectionState(CONNECTION_STATE_LOBBY);
     }
+
+    // write session key in case of session restore
+    resp.WriteString(sess->CreateSessionKey());
+
+    sNetwork->SendPacket(sess, resp);
+}
+
+void PacketHandlers::HandleRestoreSession(Session* sess, GamePacket& packet)
+{
+    std::string sessionKey;
+
+    sessionKey = packet.ReadString();
+
+    GamePacket resp(SP_RESTORE_SESSION_RESPONSE);
+
+    Session* existing = sNetwork->FindSessionBySessionKey(sessionKey.c_str());
+    if (!existing)
+    {
+        resp.WriteUInt8(STATUS_SESSIONREST_FAILED_NOTFOUND);
+        sLog->Error("Failed to restore session with key: %s", sessionKey.c_str());
+    }
+    else
+    {
+        resp.WriteUInt8(STATUS_SESSIONREST_OK);
+        sLog->Info("Restored session with key: %s", sessionKey.c_str());
+
+        uint32_t rid = existing->GetPlayer()->GetRoomId();
+        resp.WriteUInt32(rid); // 0 = no room, other value = room ID
+
+        if (rid)
+        {
+            sLog->Info("Player returned to room %u", rid);
+            sess->SetConnectionState(CONNECTION_STATE_GAME);
+
+            resp.WriteUInt32(0); // TODO: chat channels, this is chat channel ID
+            // anything else?
+        }
+        else
+        {
+            sLog->Info("Player returned to lobby");
+            sess->SetConnectionState(CONNECTION_STATE_LOBBY);
+        }
+
+        // switch session/player, so the NEW session is restored to OLD player
+        // (old session is destroyed, as well, as new player record)
+
+        Player* oldpl = existing->GetPlayer();
+        Player* dummypl = sess->GetPlayer();
+        Session* oldsess = oldpl->GetSession();
+
+        // switch player records in update array (literally switch)
+        sNetwork->OverridePlayerClient(dummypl, oldpl);
+
+        // set this session to old player
+        oldpl->OverrideSession(sess);
+        // set dummy player to old session
+        dummypl->OverrideSession(oldsess);
+
+        // new session should contain old player
+        sess->OverridePlayer(oldpl);
+        // and old session should contain new player (dummy)
+        oldsess->OverridePlayer(dummypl);
+
+        // destroy old session and new dummy player
+        oldsess->Kick();
+
+        // stop movement, if any
+        oldpl->SetMoving(false);
+    }
+
     sNetwork->SendPacket(sess, resp);
 }
 
@@ -234,9 +322,15 @@ void PacketHandlers::HandleWorldRequest(Session* sess, GamePacket& packet)
         return;
     }
 
-    plroom->PlaceNewPlayer(sess->GetPlayer());
-    sess->GetPlayer()->SetDead(false);
-    sess->GetPlayer()->ResetAttributes();
+    bool reinitGame = (packet.ReadUInt8() == 1);
+
+    // if reinitializing, do not reset player state, just use current
+    if (!reinitGame)
+    {
+        plroom->PlaceNewPlayer(sess->GetPlayer());
+        sess->GetPlayer()->SetDead(false);
+        sess->GetPlayer()->ResetAttributes();
+    }
 
     GamePacket resp(SP_NEW_WORLD);
 

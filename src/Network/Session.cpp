@@ -1,14 +1,22 @@
 #include "General.h"
+#include "Player.h"
 #include "Network.h"
 #include "Session.h"
 #include "Opcodes.h"
 #include "PacketHandlers.h"
 #include "Log.h"
+#include "StatusCodes.h"
+#include "Helpers.h"
+#include "sha1.h"
+#include <string>
 
 Session::Session(Player* plr) : m_player(plr)
 {
     m_violationCounter = 0;
     m_remoteAddr = "UNKNOWN";
+    m_latency = 0;
+    m_lastPingSendTime = 0;
+    m_isExpired = false;
 }
 
 Session::~Session()
@@ -16,12 +24,27 @@ Session::~Session()
     //
 }
 
+void Session::Update(uint32_t diff)
+{
+    uint32_t msnow = getMSTime();
+
+    // send ping packet if needed
+    if (getMSTimeDiff(m_lastPingSendTime, msnow) > PING_TIMER)
+    {
+        m_lastPingSendTime = msnow;
+
+        // send ping packet
+        GamePacket pingpacket(SP_PING);
+        sNetwork->SendPacket(this, pingpacket);
+    }
+}
+
 void Session::HandlePacket(GamePacket &packet)
 {
     // do not handle opcodes higher than maximum
     if (packet.GetOpcode() >= OPCODE_MAX)
     {
-        sLog->Error("Client sent invalid packet (unknown opcode %u), not handling", packet.GetOpcode());
+        sLog->Error("Client (IP: %s) sent invalid packet (unknown opcode %u), not handling", GetRemoteAddr(), packet.GetOpcode());
         IncreaseViolationCounter();
         return;
     }
@@ -34,7 +57,7 @@ void Session::HandlePacket(GamePacket &packet)
         // verify the state of client connection
         if ((PacketHandlerTable[packet.GetOpcode()].stateRestriction & (1 << m_connectionState)) == 0)
         {
-            sLog->Error("Client (IP: %s) sent invalid packet (opcode %u) for state %u, not handling", packet.GetOpcode(), m_connectionState, GetRemoteAddr());
+            sLog->Error("Client (IP: %s) sent invalid packet (opcode %u) for state %u, not handling", GetRemoteAddr(), packet.GetOpcode(), m_connectionState);
             IncreaseViolationCounter();
             return;
         }
@@ -55,6 +78,13 @@ void Session::HandlePacket(GamePacket &packet)
 Player* Session::GetPlayer()
 {
     return m_player;
+}
+
+void Session::OverridePlayer(Player* pl)
+{
+    // old player will be destroyed elsewhere, but only by networking thread
+
+    m_player = pl;
 }
 
 void Session::SetConnectionInfo(SOCK socket, sockaddr_in &addr, char* remoteAddr)
@@ -116,4 +146,49 @@ void Session::ClearViolationCounter()
 bool Session::IsMarkedAsExpired()
 {
     return m_isExpired;
+}
+
+void Session::Kick()
+{
+    // send kick packet
+    GamePacket pkt(SP_KICK);
+    pkt.WriteUInt8(STATUS_PLAYEREXIT_REPEATED_LOGIN); // reason
+    sNetwork->SendPacket(this, pkt);
+
+    // will be cut by network thread in next turn
+    m_isExpired = true;
+}
+
+const char* Session::CreateSessionKey()
+{
+    unsigned char resbuf[64];
+    memset(resbuf, 0, sizeof(resbuf));
+    char hexbuf[64];
+    memset(hexbuf, 0, sizeof(hexbuf));
+
+    // prepare hash base
+    std::string base = std::to_string(rand() % 2000) + std::string(m_player->GetName()) + std::to_string(rand() % 2000);
+
+    sha1::calc(base.c_str(), base.length(), resbuf);
+    sha1::toHexString(resbuf, hexbuf);
+
+    // store 24char limited session key
+    m_sessionKey = std::string(hexbuf).substr(0, 24);
+
+    return m_sessionKey.c_str();
+}
+
+const char* Session::GetSessionKey()
+{
+    return m_sessionKey.c_str();
+}
+
+void Session::SignalLatencyMeasure()
+{
+    m_latency = getMSTimeDiff(m_lastPingSendTime, getMSTime());
+}
+
+uint32_t Session::GetLatency()
+{
+    return m_latency;
 }

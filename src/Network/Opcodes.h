@@ -51,6 +51,12 @@ enum Opcodes
     SP_DESTROY_OBJECT           = 0x23,
     SP_UPDATE_WORLD             = 0x24,
     CP_EAT_REQUEST              = 0x25,
+    SP_PING                     = 0x26,
+    CP_PONG                     = 0x27,
+    SP_PING_PONG                = 0x28,
+    CP_RESTORE_SESSION          = 0x29,
+    SP_RESTORE_SESSION_RESPONSE = 0x2A,
+    SP_KICK                     = 0x2B,
 
     OPCODE_MAX
 };

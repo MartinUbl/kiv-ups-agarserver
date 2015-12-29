@@ -44,6 +44,8 @@ namespace PacketHandlers
     PACKET_HANDLER(HandleMoveHeartbeat);
     PACKET_HANDLER(HandleMoveDirection);
     PACKET_HANDLER(HandleEatRequest);
+    PACKET_HANDLER(HandleRestoreSession);
+    PACKET_HANDLER(HandlePong);
 };
 
 /* table of packet handlers; the opcode is also an index here */
@@ -86,6 +88,12 @@ static PacketHandlerStructure PacketHandlerTable[] = {
     { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_DESTROY_OBJECT
     { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_UPDATE_WORLD
     { &PacketHandlers::HandleEatRequest,        STATE_RESTRICTION_GAME },       // CP_EAT_REQUEST
+    { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_PING
+    { &PacketHandlers::HandlePong,              STATE_RESTRICTION_ANY },        // CP_PONG
+    { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_PING_PONG
+    { &PacketHandlers::HandleRestoreSession,    STATE_RESTRICTION_ANY },        // CP_RESTORE_SESSION
+    { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_RESTORE_SESSION_RESPONSE
+    { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_KICK
 };
 
 #endif

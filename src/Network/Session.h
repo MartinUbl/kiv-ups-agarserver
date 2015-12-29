@@ -3,9 +3,11 @@
 
 #include "GamePacket.h"
 #include "Network.h"
-#include "Player.h"
 
+/* Maximum violations before disconnection */
 #define MAX_SESSION_VIOLATIONS 3
+/* Number of milliseconds between pings */
+#define PING_TIMER 60000
 
 /* Class holding information about session */
 class Session
@@ -15,11 +17,16 @@ class Session
         Session(Player* plr);
         ~Session();
 
+        /* Update session if needed */
+        void Update(uint32_t diff);
+
         /* Handles packet within session */
         void HandlePacket(GamePacket &packet);
 
         /* Retrieves Player pointer */
         Player* GetPlayer();
+        /* Overrides player pointer after i.e. session restore */
+        void OverridePlayer(Player* pl);
 
         /* Sets connection info (socket descriptor and socket info) */
         void SetConnectionInfo(SOCK socket, sockaddr_in &addr, char* remoteAddr = nullptr);
@@ -37,6 +44,18 @@ class Session
 
         /* Is session marked as expired? (should we disconnect client?) */
         bool IsMarkedAsExpired();
+        /* Kick player and end session */
+        void Kick();
+
+        /* Creates, stores and returns generated session key */
+        const char* CreateSessionKey();
+        /* Retrieves session key */
+        const char* GetSessionKey();
+
+        /* Signals, that we received PING response */
+        void SignalLatencyMeasure();
+        /* Retrieves last measured latency */
+        uint32_t GetLatency();
 
     protected:
         /* increases violation counter */
@@ -61,6 +80,12 @@ class Session
         bool m_isExpired;
         /* remote address */
         std::string m_remoteAddr;
+        /* network latency */
+        uint32_t m_latency;
+        /* last ping send time */
+        uint32_t m_lastPingSendTime;
+        /* session key (for restoring session) */
+        std::string m_sessionKey;
 };
 
 #endif

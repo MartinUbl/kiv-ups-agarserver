@@ -333,3 +333,38 @@ void Network::SendPacket(SOCK socket, GamePacket &pkt)
     // send response
     send(socket, (const char*)tosend, pkt.GetSize() + GAMEPACKET_HEADER_SIZE, 0);
 }
+
+Session* Network::FindSessionByPlayerId(uint32_t playerId)
+{
+    for (std::list<ClientRecord*>::iterator itr = m_clients.begin(); itr != m_clients.end(); ++itr)
+    {
+        if ((*itr)->player->GetId() == playerId)
+            return (*itr)->player->GetSession();
+    }
+
+    return nullptr;
+}
+
+Session* Network::FindSessionBySessionKey(const char* sessionKey)
+{
+    for (std::list<ClientRecord*>::iterator itr = m_clients.begin(); itr != m_clients.end(); ++itr)
+    {
+        if (strcmp((*itr)->player->GetSession()->GetSessionKey(), sessionKey) == 0)
+            return (*itr)->player->GetSession();
+    }
+
+    return nullptr;
+}
+
+void Network::OverridePlayerClient(Player* oldplayer, Player* newplayer)
+{
+    for (std::list<ClientRecord*>::iterator itr = m_clients.begin(); itr != m_clients.end(); ++itr)
+    {
+        // this will switch client records between old and new player records
+
+        if ((*itr)->player == oldplayer)
+            (*itr)->player = newplayer;
+        else if ((*itr)->player == newplayer)
+            (*itr)->player = oldplayer;
+    }
+}

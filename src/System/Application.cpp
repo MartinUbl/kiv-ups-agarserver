@@ -26,6 +26,9 @@ bool Application::Init(int argc, char** argv)
     sLog->Info("Agar.io game remake server emulator - KIV/UPS - semestral work project");
     sLog->Info("Made by Kennny (c) 2015\n");
 
+    // init PRNG
+    srand((unsigned int)time(nullptr));
+
     // Initialize all modules needed for application runtime
 
     // TODO: use cli args to override several config options

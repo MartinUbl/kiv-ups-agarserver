@@ -96,6 +96,14 @@ class Network
         /* Sends packet to specific session */
         void SendPacket(Session* sess, GamePacket &pkt);
 
+        /* Finds session using player ID */
+        Session* FindSessionByPlayerId(uint32_t playerId);
+        /* Finds session using session key */
+        Session* FindSessionBySessionKey(const char* sessionKey);
+
+        /* Overrides player in client map */
+        void OverridePlayerClient(Player* oldplayer, Player* newplayer);
+
     protected:
         /* Hidden singleton constructor */
         Network();
