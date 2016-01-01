@@ -18,10 +18,10 @@ void Gameplay::Init()
     // Create default room
     sLog->Info("Creating default room...");
 
-    Room* rm = CreateRoom(GAME_TYPE_FREEFORALL, 30);
+    Room* rm = CreateRoom(GAME_TYPE_FREEFORALL, 30, "Default room", (uint32_t)MAP_DEFAULT_SIZE);
     if (rm)
     {
-        rm->SetRoomName("Default room");
+        // this will guarantee preserving even if the room is empty
         rm->SetAsDefault(true);
     }
 }
@@ -47,10 +47,10 @@ Room* Gameplay::GetRoom(uint32_t id)
     return m_rooms[id];
 }
 
-Room* Gameplay::CreateRoom(uint32_t gameType, uint32_t capacity)
+Room* Gameplay::CreateRoom(uint32_t gameType, uint32_t capacity, const char* name, uint32_t size)
 {
     // create room record and put it into map
-    Room* nroom = new Room(GenerateRoomId(), gameType, capacity);
+    Room* nroom = new Room(GenerateRoomId(), gameType, capacity, name, size);
     m_rooms[nroom->GetId()] = nroom;
 
     return nroom;

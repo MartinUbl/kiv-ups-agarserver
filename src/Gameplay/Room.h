@@ -14,9 +14,7 @@
 #define CELL_VISIBILITY_OFFSET 2
 
 /* default map width */
-#define MAP_DEFAULT_SIZE_X 500.0f
-/* default map height */
-#define MAP_DEFAULT_SIZE_Y 500.0f
+#define MAP_DEFAULT_SIZE 500.0f
 
 /* respawn time in seconds */
 #define MAP_OBJECT_RESPAWN_TIME 60
@@ -50,7 +48,7 @@ class Room
 {
     public:
         /* Only one constructor - all parameters are mandatory */
-        Room(uint32_t id, uint32_t gameType, uint32_t capacity);
+        Room(uint32_t id, uint32_t gameType, uint32_t capacity, const char* name = "Unnamed room", uint32_t size = (uint32_t)MAP_DEFAULT_SIZE);
         ~Room();
 
         /* Adds player into room */

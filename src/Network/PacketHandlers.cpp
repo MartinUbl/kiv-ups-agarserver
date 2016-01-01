@@ -309,6 +309,43 @@ void PacketHandlers::HandleJoinRoomRequest(Session* sess, GamePacket& packet)
     sNetwork->SendPacket(sess, resp);
 }
 
+void PacketHandlers::HandleCreateRoom(Session* sess, GamePacket& packet)
+{
+    uint32_t size, capacity;
+    std::string name;
+    Room* rm = nullptr;
+    uint8_t statusCode = STATUS_ROOMCREATE_OK;
+
+    name = packet.ReadString();
+    capacity = packet.ReadUInt32();
+    size = packet.ReadUInt32();
+
+    GamePacket resp(SP_JOIN_ROOM_RESPONSE);
+
+    if (capacity > 50 || capacity < 2 || size > 500 || size < 20)
+        statusCode = STATUS_ROOMCREATE_INVALID_PARAMETERS;
+    else
+    {
+        rm = sGameplay->CreateRoom(GAME_TYPE_FREEFORALL, capacity, name.c_str(), size);
+
+        if (!rm)
+            statusCode = STATUS_ROOMCREATE_SERVER_LIMIT;
+        else
+        {
+            sess->GetPlayer()->SetUpdateEnabled(false);
+
+            rm->AddPlayer(sess->GetPlayer());
+            // move player to game stage
+            sess->SetConnectionState(CONNECTION_STATE_GAME);
+        }
+    }
+
+    resp.WriteUInt8(statusCode);
+    resp.WriteUInt32(0); // TODO: chat channels
+
+    sNetwork->SendPacket(sess, resp);
+}
+
 void PacketHandlers::HandleWorldRequest(Session* sess, GamePacket& packet)
 {
     Room* plroom;

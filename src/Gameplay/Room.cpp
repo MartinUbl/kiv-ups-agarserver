@@ -26,7 +26,7 @@ bool RespawnTimeComparator::operator()(WorldObject* a, WorldObject* b)
     return a->GetRespawnTime() > b->GetRespawnTime();
 }
 
-Room::Room(uint32_t id, uint32_t gameType, uint32_t capacity) : m_roomName("Unnamed room")
+Room::Room(uint32_t id, uint32_t gameType, uint32_t capacity, const char* name, uint32_t size) : m_roomName(name)
 {
     m_id = id;
     m_gameType = gameType;
@@ -35,8 +35,8 @@ Room::Room(uint32_t id, uint32_t gameType, uint32_t capacity) : m_roomName("Unna
 
     m_lastObjectId = 0;
 
-    // for now, this wouldn't vary
-    SetMapSize(MAP_DEFAULT_SIZE_X, MAP_DEFAULT_SIZE_Y);
+    float fsize = (float)size;
+    SetMapSize(fsize, fsize);
 
     // this is default for now, dunno if it will be adjustable in future
     GenerateRandomContent();
@@ -456,23 +456,41 @@ void Room::GenerateRandomContent()
 {
     size_t i, j, k;
 
+    float lbound, rbound, ubound, bbound;
+
     ClearAllObjects();
 
     for (i = 0; i < m_cellMap.size(); i++)
     {
+        // calculate horizontal bounds
+        lbound = (i*CELL_SIZE_X);
+        rbound = ((i + 1)*CELL_SIZE_X);
+
+        // limit right bound to actual map size
+        if (rbound > m_sizeX)
+            rbound = m_sizeX;
+
         for (j = 0; j < m_cellMap[i].size(); j++)
         {
+            // calculate vertical bounds
+            ubound = (j*CELL_SIZE_Y);
+            bbound = ((j + 1)*CELL_SIZE_Y);
+
+            // limit bottom bound to actual map size
+            if (bbound > m_sizeY)
+                bbound = m_sizeY;
+
             // let's say we have 20 eatable food in one cell
             for (k = 0; k < 20; k++)
-                CreateRoomObject<IdleFoodEntity>(i*CELL_SIZE_X + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_X, j*CELL_SIZE_Y + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_Y);
+                CreateRoomObject<IdleFoodEntity>(lbound + positionRandomizer(positionRandomizerEngine)*(rbound - lbound), ubound + positionRandomizer(positionRandomizerEngine)*(bbound - ubound));
 
             // and 1 bonus
             for (k = 0; k < 1; k++)
-                CreateRoomObject<BonusFoodEntity>(i*CELL_SIZE_X + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_X, j*CELL_SIZE_Y + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_Y);
+                CreateRoomObject<BonusFoodEntity>(lbound + positionRandomizer(positionRandomizerEngine)*(rbound - lbound), ubound + positionRandomizer(positionRandomizerEngine)*(bbound - ubound));
 
             // and 1 trap
             for (k = 0; k < 1; k++)
-                CreateRoomObject<TrapEntity>(i*CELL_SIZE_X + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_X, j*CELL_SIZE_Y + positionRandomizer(positionRandomizerEngine)*CELL_SIZE_Y);
+                CreateRoomObject<TrapEntity>(lbound + positionRandomizer(positionRandomizerEngine)*(rbound - lbound), ubound + positionRandomizer(positionRandomizerEngine)*(bbound - ubound));
         }
     }
 }

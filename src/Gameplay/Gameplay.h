@@ -34,7 +34,7 @@ class Gameplay
         Room* GetRoom(uint32_t id);
 
         /* Creates room using specified parameters */
-        Room* CreateRoom(uint32_t gameType, uint32_t capacity);
+        Room* CreateRoom(uint32_t gameType, uint32_t capacity, const char* name, uint32_t size);
 
         /* Fills supplied list with existing rooms of specified type */
         void GetRoomList(std::list<Room*> &target, int32_t gameType = GAME_TYPE_ANY);

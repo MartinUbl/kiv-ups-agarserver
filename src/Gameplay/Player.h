@@ -14,8 +14,12 @@
 /* Maximum movement speed (per ms)*/
 #define MOVE_MS_COEF_MAX 0.0065f
 /* Minimum movement speed (per ms)*/
-#define MOVE_MS_COEF_MIN 0.0025f
+#define MOVE_MS_COEF_MIN 0.0015f
 
+/* At this point, player starts to lose speed (float for calculations) */
+#define PLAYER_REDUCE_SPEED_SIZE 12.0f
+/* Final point where player stops losing speed (float for calculations) */
+#define PLAYER_REDUCE_SPEED_STOP_SIZE 500.0f
 /* At this point, player will gain only half of all points to size */
 #define PLAYER_REDUCE_INCOME_SIZE 120
 /* At this point, player stops gaining size */

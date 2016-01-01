@@ -46,6 +46,7 @@ namespace PacketHandlers
     PACKET_HANDLER(HandleEatRequest);
     PACKET_HANDLER(HandleRestoreSession);
     PACKET_HANDLER(HandlePong);
+    PACKET_HANDLER(HandleCreateRoom);
 };
 
 /* table of packet handlers; the opcode is also an index here */
@@ -59,7 +60,7 @@ static PacketHandlerStructure PacketHandlerTable[] = {
     { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_ROOM_LIST_RESPONSE
     { &PacketHandlers::HandleJoinRoomRequest,   STATE_RESTRICTION_LOBBY },      // CP_JOIN_ROOM
     { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_JOIN_ROOM_RESPONSE
-    { &PacketHandlers::Handle_NULL,             STATE_RESTRICTION_LOBBY },      // CP_CREATE_ROOM
+    { &PacketHandlers::HandleCreateRoom,        STATE_RESTRICTION_LOBBY },      // CP_CREATE_ROOM
     { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_CREATE_ROOM_RESPONSE
     { &PacketHandlers::HandleWorldRequest,      STATE_RESTRICTION_GAME },       // CP_WORLD_REQUEST
     { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_NEW_PLAYER

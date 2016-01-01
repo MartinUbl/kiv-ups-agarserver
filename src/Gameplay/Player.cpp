@@ -118,12 +118,12 @@ void Player::SetSize(uint32_t size)
 {
     m_playerSize = size;
 
-    if (m_playerSize <= 120)
+    if (m_playerSize <= PLAYER_REDUCE_SPEED_SIZE)
         m_playerSpeed = MOVE_MS_COEF_MAX;
-    else if (m_playerSize >= 1200)
+    else if (m_playerSize >= PLAYER_REDUCE_SPEED_STOP_SIZE)
         m_playerSpeed = MOVE_MS_COEF_MIN;
     else
-        m_playerSpeed = -((int32_t)m_playerSize - 540)*(MOVE_MS_COEF_MIN / 420) + ((MOVE_MS_COEF_MAX + MOVE_MS_COEF_MIN) / 2.0f);
+        m_playerSpeed = MOVE_MS_COEF_MAX - ((m_playerSize - PLAYER_REDUCE_SPEED_SIZE) / (PLAYER_REDUCE_SPEED_STOP_SIZE - PLAYER_REDUCE_SPEED_SIZE))*(MOVE_MS_COEF_MAX - MOVE_MS_COEF_MIN);
 }
 
 void Player::SetDead(bool state)
