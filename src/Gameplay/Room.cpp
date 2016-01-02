@@ -6,6 +6,7 @@
 #include "Entities.h"
 #include "GridSearchers.h"
 #include "Log.h"
+#include "StatusCodes.h"
 
 #include <math.h>
 #include <random>
@@ -174,6 +175,13 @@ void Room::RemovePlayer(Player* player)
             break;
         }
     }
+
+    // finally, broadcast player exit message to everyone else in room
+
+    GamePacket pktexit(SP_PLAYER_EXIT);
+    pktexit.WriteUInt32(player->GetId());
+    pktexit.WriteUInt8(STATUS_PLAYEREXIT_LEAVE); // TODO: make better use of this field
+    BroadcastPacket(pktexit);
 }
 
 void Room::PlaceNewPlayer(Player* player)
