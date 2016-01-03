@@ -7,6 +7,7 @@
 #include "GridSearchers.h"
 #include "Log.h"
 #include "StatusCodes.h"
+#include "Session.h"
 
 #include <math.h>
 #include <random>
@@ -175,6 +176,9 @@ void Room::RemovePlayer(Player* player)
             break;
         }
     }
+
+    // move player back to lobby
+    player->GetSession()->SetConnectionState(CONNECTION_STATE_LOBBY);
 
     // finally, broadcast player exit message to everyone else in room
 

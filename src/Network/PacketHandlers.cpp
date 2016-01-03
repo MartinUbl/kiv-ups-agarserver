@@ -508,3 +508,19 @@ void PacketHandlers::HandleEatRequest(Session* sess, GamePacket& packet)
             plroom->EatObject(plr, obj);
     }
 }
+
+void PacketHandlers::HandlePlayerExit(Session* sess, GamePacket& packet)
+{
+    Player* plr = sess->GetPlayer();
+    Room* plroom = sGameplay->GetRoom(plr->GetRoomId());
+
+    if (!plroom)
+    {
+        sLog->Error("Received player exit request when not in room!");
+        return;
+    }
+
+    plroom->RemovePlayer(plr);
+
+    // player exit packet was sent in RemovePlayer call, client exits room automatically
+}

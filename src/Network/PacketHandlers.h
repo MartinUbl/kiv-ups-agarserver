@@ -47,6 +47,7 @@ namespace PacketHandlers
     PACKET_HANDLER(HandleRestoreSession);
     PACKET_HANDLER(HandlePong);
     PACKET_HANDLER(HandleCreateRoom);
+    PACKET_HANDLER(HandlePlayerExit);
 };
 
 /* table of packet handlers; the opcode is also an index here */
@@ -80,7 +81,7 @@ static PacketHandlerStructure PacketHandlerTable[] = {
     { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_USE_BONUS
     { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_CANCEL_BONUS
     { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_NEW_OBJECT
-    { &PacketHandlers::Handle_NULL,             STATE_RESTRICTION_GAME },       // CP_PLAYER_EXIT
+    { &PacketHandlers::HandlePlayerExit,        STATE_RESTRICTION_GAME },       // CP_PLAYER_EXIT
     { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_PLAYER_EXIT
     { &PacketHandlers::Handle_NULL,             STATE_RESTRICTION_GAME },       // CP_STATS
     { &PacketHandlers::Handle_ServerSide,       STATE_RESTRICTION_NEVER },      // SP_STATS_RESPONSE
