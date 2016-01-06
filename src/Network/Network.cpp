@@ -31,11 +31,10 @@ bool Network::Startup()
         sLog->Error("Invalid port %i specified, exiting", mp);
         return false;
     }
-    // do not allow to run on privileged port range
+    // print warning when trying to run server on privileged (well-known) port
     if (mp <= MAX_PRIVILEGED_NET_PORT)
     {
-        sLog->Error("It is not allowed to run this application on privileged port (%i); switch to port number between %u and %u", mp, MAX_PRIVILEGED_NET_PORT+1, MAX_VALID_NET_PORT);
-        return false;
+        sLog->Error("It is not recommended to run this application on privileged port (%i); switch to port number between %u and %u", mp, MAX_PRIVILEGED_NET_PORT+1, MAX_VALID_NET_PORT);
     }
 
     // now we have valid port number
@@ -57,6 +56,13 @@ bool Network::Startup()
     {
         sLog->Error("Failed to create socket");
         return false;
+    }
+
+    int param = 1;
+    if (setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, (const char*)&param, sizeof(int)) == -1)
+    {
+        sLog->Error("Failed to use SO_REUSEADDR flag, bind may fail due to orphan connections to old socket");
+        // do not fail whole process, this is not mandatory
     }
 
     // retrieve address
