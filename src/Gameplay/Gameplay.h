@@ -25,13 +25,17 @@ class Gameplay
 
         /* Initializes gameplay - creates default rooms, etc. */
         void Init();
-        /* Updates gameplay */
-        void Update(uint32_t diff);
+
+        /* Shuts down whole gameplay */
+        void Shutdown();
 
         /* Returns first free room ID */
         uint32_t GenerateRoomId();
         /* Retrieves room by its ID */
         Room* GetRoom(uint32_t id);
+
+        /* Deletes room from update array */
+        void DestroyRoom(uint32_t id);
 
         /* Creates room using specified parameters */
         Room* CreateRoom(uint32_t gameType, uint32_t capacity, const char* name, uint32_t size);
@@ -48,6 +52,9 @@ class Gameplay
         uint32_t m_lastRoomId;
         /* Room map */
         std::map<uint32_t, Room*> m_rooms;
+
+        /* room list mutex */
+        std::recursive_mutex roomlist_mtx;
 };
 
 #define sGameplay Singleton<Gameplay>::getInstance()

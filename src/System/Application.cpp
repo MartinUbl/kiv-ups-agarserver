@@ -9,11 +9,9 @@
 
 #include <thread>
 
-void applicationUpdateWorker();
-
 Application::Application()
 {
-    m_lastUpdate = getMSTime();
+    //
 }
 
 Application::~Application()
@@ -43,48 +41,45 @@ bool Application::Init(int argc, char** argv)
 
     sGameplay->Init();
 
-    m_updateThread = new std::thread(applicationUpdateWorker);
-
     sLog->Info("Initialization sequence complete!\n");
 
     return true;
 }
 
+void Application::PrintStats()
+{
+    sLog->Info("Server received packets: %llu", sNetwork->GetRecvPacketsCount());
+    sLog->Info("Server sent packets: %llu", sNetwork->GetSentPacketsCount());
+    sLog->Info("Server received bytes: %llu B", sNetwork->GetRecvBytesCount());
+    sLog->Info("Server sent bytes: %llu B", sNetwork->GetSentBytesCount());
+}
+
 int Application::Run()
 {
-    // Main application loop
+    std::string input;
+
     while (true)
     {
-        sNetwork->Update();
+        std::cout << "> ";
+        std::cin >> input;
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        // shut server down
+        if (input == "exit")
+        {
+            sNetwork->Shutdown();
+            sGameplay->Shutdown();
+
+            PrintStats();
+
+            break;
+        }
+        else if (input == "stats")
+        {
+            PrintStats();
+        }
+
+        std::cout << std::endl;
     }
 
     return 0;
-}
-
-int Application::Update()
-{
-    uint32_t lastUpdate = m_lastUpdate;
-
-    sGameplay->Update(getMSTimeDiff(m_lastUpdate, getMSTime()));
-
-    m_lastUpdate = getMSTime();
-
-    return getMSTimeDiff(lastUpdate, m_lastUpdate);
-}
-
-void applicationUpdateWorker()
-{
-    int delay;
-
-    while (true)
-    {
-        delay = sApplication->Update();
-
-        if (delay > 100)
-            delay = 100;
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100 - delay + 1));
-    }
 }

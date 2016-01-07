@@ -8,6 +8,9 @@
 #include "Log.h"
 #include "StatusCodes.h"
 #include "Session.h"
+#include "Helpers.h"
+
+#include "Gameplay.h"
 
 #include <math.h>
 #include <random>
@@ -28,6 +31,13 @@ bool RespawnTimeComparator::operator()(WorldObject* a, WorldObject* b)
     return a->GetRespawnTime() > b->GetRespawnTime();
 }
 
+void runRoomUpdater(Room* room)
+{
+    room->Run();
+
+    delete room;
+}
+
 Room::Room(uint32_t id, uint32_t gameType, uint32_t capacity, const char* name, uint32_t size) : m_roomName(name)
 {
     m_id = id;
@@ -42,6 +52,8 @@ Room::Room(uint32_t id, uint32_t gameType, uint32_t capacity, const char* name, 
 
     // this is default for now, dunno if it will be adjustable in future
     GenerateRandomContent();
+
+    m_updateThread = new std::thread(runRoomUpdater, this);
 }
 
 Room::~Room()
@@ -119,6 +131,51 @@ void Room::Update(uint32_t diff)
         m_respawnQueue.pop();
 
         RespawnObject(toresp);
+    }
+}
+
+void Room::Run()
+{
+    uint32_t delay;
+
+    m_lastUpdateTime = getMSTime();
+    // sleep before first update
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    m_emptyStateTime = 0;
+
+    SetRunning(true);
+
+    while (IsRunning())
+    {
+        // end empty nondefault room after a while
+        if (!m_isDefault && m_emptyStateTime && getMSTimeDiff(m_emptyStateTime, getMSTime()) >= ROOM_EMPTY_SHUTDOWN * 1000)
+        {
+            SetRunning(false);
+            sGameplay->DestroyRoom(m_id);
+            break;
+        }
+
+        // when room is empty, set timestamp
+        if (!m_isDefault)
+        {
+            if (m_emptyStateTime == 0 && m_playerList.empty())
+                m_emptyStateTime = getMSTime();
+
+            if (m_emptyStateTime != 0 && !m_playerList.empty())
+                m_emptyStateTime = 0;
+        }
+
+        delay = getMSTimeDiff(m_lastUpdateTime, getMSTime());
+
+        Update(delay);
+
+        if (delay > 100)
+            delay = 100;
+
+        m_lastUpdateTime = getMSTime();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100 - delay + 1));
     }
 }
 
@@ -577,4 +634,23 @@ WorldObject* Room::GetManhattanClosestObject(WorldObject* source)
     gs.Execute();
 
     return visitor.GetFoundObject();
+}
+
+void Room::SetRunning(bool state)
+{
+    std::unique_lock<std::mutex> lck(generic_mtx);
+
+    m_isRunning = state;
+}
+
+bool Room::IsRunning()
+{
+    std::unique_lock<std::mutex> lck(generic_mtx);
+
+    return m_isRunning;
+}
+
+void Room::WaitForShutdown()
+{
+    m_updateThread->join();
 }

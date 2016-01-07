@@ -49,7 +49,7 @@ void Session::HandlePacket(GamePacket &packet)
         return;
     }
 
-    //sLog->Debug("NETWORK: Received packet %u", packet.GetOpcode());
+    sLog->Debug("NETWORK: Received packet %u", packet.GetOpcode());
 
     // packet handlers might throw exception about trying to reach out of packet data range
     try

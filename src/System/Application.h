@@ -15,19 +15,15 @@ class Application
         /* Main run method called from main() entry point */
         int Run();
 
-        /* Updates all available entities */
-        int Update();
-
     protected:
         /* Hidden singleton constructor */
         Application();
 
-    private:
-        /* timestamp of last update */
-        uint32_t m_lastUpdate;
+        /* Prints server statistics */
+        void PrintStats();
 
-        /* world update thread */
-        std::thread *m_updateThread;
+    private:
+        //
 };
 
 #define sApplication Singleton<Application>::getInstance()

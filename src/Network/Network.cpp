@@ -9,14 +9,22 @@
 #include "Gameplay.h"
 #include "Room.h"
 
-Network::Network()
+Network::Network() : m_networkThread(nullptr)
 {
-    //
+    m_recvBytesCount = 0;
+    m_sentBytesCount = 0;
+    m_recvPacketsCount = 0;
+    m_sentPacketsCount = 0;
 }
 
 Network::~Network()
 {
     //
+}
+
+void runNetworkThread()
+{
+    sNetwork->Run();
 }
 
 bool Network::Startup()
@@ -112,9 +120,53 @@ bool Network::Startup()
 
     sLog->Info("Listening on %s:%u", bindAddr.c_str(), m_port);
 
+    sLog->Info("Starting network thread");
+
+    m_networkThread = new std::thread(runNetworkThread);
+
     sLog->Info("Networking started successfully!\n");
 
     return true;
+}
+
+void Network::Shutdown()
+{
+    sLog->Info("Shutting down networking...");
+
+    SetRunningFlag(false);
+
+    m_networkThread->join();
+
+    sLog->Info("Networking thread stopped, closing socket");
+
+    CloseSocket_gen(m_socket);
+}
+
+void Network::SetRunningFlag(bool state)
+{
+    std::unique_lock<std::mutex> lck(generic_mtx);
+
+    m_isRunning = state;
+}
+
+bool Network::IsRunning()
+{
+    std::unique_lock<std::mutex> lck(generic_mtx);
+
+    return m_isRunning;
+}
+
+void Network::Run()
+{
+    SetRunningFlag(true);
+
+    // Main network update loop
+    while (IsRunning())
+    {
+        sNetwork->Update();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 }
 
 void Network::Update()
@@ -175,7 +227,7 @@ void Network::AcceptConnections()
     }
 }
 
-void Network::CloseClientSocket(SOCK socket)
+void Network::CloseSocket_gen(SOCK socket)
 {
 #ifdef _WIN32
     shutdown(socket, SD_BOTH);
@@ -205,7 +257,7 @@ void Network::UpdateClients()
         if (sess->IsMarkedAsExpired())
         {
             sLog->Debug("Client session (IP: %s) expired, disconnecting", sess->GetRemoteAddr());
-            CloseClientSocket(sess->GetSocket());
+            CloseSocket_gen(sess->GetSocket());
             itr = RemoveClient(itr);
             continue;
         }
@@ -219,6 +271,8 @@ void Network::UpdateClients()
         {
             header_buf[0] = ntohs(header_buf[0]);
             header_buf[1] = ntohs(header_buf[1]);
+
+            m_recvBytesCount += GAMEPACKET_HEADER_SIZE;
 
             // size read must be equal to header length
             if (result == GAMEPACKET_HEADER_SIZE && header_buf[1] < MAX_GAME_PACKET_SIZE)
@@ -241,10 +295,14 @@ void Network::UpdateClients()
                         itr = RemoveClient(itr);
                         continue;
                     }
+
+                    m_recvBytesCount += (int64_t)header_buf[1];
                 }
 
                 // build packet (this will cause previous packet destructor call and new packet constructor call)
                 pkt = GamePacket(header_buf[0], header_buf[1]);
+
+                m_recvPacketsCount++;
 
                 // pass the data, if any
                 if (header_buf[1] > 0)
@@ -256,7 +314,7 @@ void Network::UpdateClients()
             else
             {
                 sLog->Error("Received malformed packet: no valid headers sent; disconnecting client (IP: %s)", sess->GetRemoteAddr());
-                CloseClientSocket(sess->GetSocket());
+                CloseSocket_gen(sess->GetSocket());
                 itr = RemoveClient(itr);
                 continue;
             }
@@ -276,7 +334,7 @@ void Network::UpdateClients()
             if (error != SOCKETWOULDBLOCK && error != 0)
             {
                 sLog->Error("Unhandled socket error: %u; disconnecting client (IP: %s)", error, sess->GetRemoteAddr());
-                CloseClientSocket(sess->GetSocket());
+                CloseSocket_gen(sess->GetSocket());
                 itr = RemoveClient(itr);
                 continue;
             }
@@ -324,7 +382,7 @@ void Network::SendPacket(SOCK socket, GamePacket &pkt)
     uint16_t op, sz;
     uint8_t* tosend = new uint8_t[GAMEPACKET_HEADER_SIZE + pkt.GetSize()];
 
-    //sLog->Debug("NETWORK: Sending packet %u", pkt.GetOpcode());
+    sLog->Debug("NETWORK: Sending packet %u", pkt.GetOpcode());
 
     op = htons(pkt.GetOpcode());
     sz = htons(pkt.GetSize());
@@ -335,6 +393,9 @@ void Network::SendPacket(SOCK socket, GamePacket &pkt)
     memcpy(tosend + 2, &sz, 2);
     // write contents
     memcpy(tosend + 4, pkt.GetData(), pkt.GetSize());
+
+    m_sentBytesCount += pkt.GetSize() + GAMEPACKET_HEADER_SIZE;
+    m_sentPacketsCount++;
 
     // send response
     send(socket, (const char*)tosend, pkt.GetSize() + GAMEPACKET_HEADER_SIZE, 0);
@@ -374,3 +435,24 @@ void Network::OverridePlayerClient(Player* oldplayer, Player* newplayer)
             (*itr)->player = oldplayer;
     }
 }
+
+uint64_t Network::GetRecvBytesCount()
+{
+    return m_recvBytesCount;
+}
+
+uint64_t Network::GetSentBytesCount()
+{
+    return m_sentBytesCount;
+}
+
+uint64_t Network::GetRecvPacketsCount()
+{
+    return m_recvPacketsCount;
+}
+
+uint64_t Network::GetSentPacketsCount()
+{
+    return m_sentPacketsCount;
+}
+

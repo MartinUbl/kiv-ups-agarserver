@@ -26,10 +26,17 @@ void Gameplay::Init()
     }
 }
 
-void Gameplay::Update(uint32_t diff)
+void Gameplay::Shutdown()
 {
+    sLog->Info("Shutting down gameplay, destroying rooms...");
+
+    std::unique_lock<std::recursive_mutex> lck(roomlist_mtx);
+
     for (std::map<uint32_t, Room*>::iterator itr = m_rooms.begin(); itr != m_rooms.end(); ++itr)
-        itr->second->Update(diff);
+    {
+        itr->second->SetRunning(false);
+        itr->second->WaitForShutdown();
+    }
 }
 
 uint32_t Gameplay::GenerateRoomId()
@@ -40,6 +47,8 @@ uint32_t Gameplay::GenerateRoomId()
 
 Room* Gameplay::GetRoom(uint32_t id)
 {
+    std::unique_lock<std::recursive_mutex> lck(roomlist_mtx);
+
     // if it's not in rooms map, it does not exist
     if (m_rooms.find(id) == m_rooms.end())
         return nullptr;
@@ -47,8 +56,17 @@ Room* Gameplay::GetRoom(uint32_t id)
     return m_rooms[id];
 }
 
+void Gameplay::DestroyRoom(uint32_t id)
+{
+    std::unique_lock<std::recursive_mutex> lck(roomlist_mtx);
+
+    m_rooms.erase(id);
+}
+
 Room* Gameplay::CreateRoom(uint32_t gameType, uint32_t capacity, const char* name, uint32_t size)
 {
+    std::unique_lock<std::recursive_mutex> lck(roomlist_mtx);
+
     // create room record and put it into map
     Room* nroom = new Room(GenerateRoomId(), gameType, capacity, name, size);
     m_rooms[nroom->GetId()] = nroom;
@@ -58,6 +76,8 @@ Room* Gameplay::CreateRoom(uint32_t gameType, uint32_t capacity, const char* nam
 
 void Gameplay::GetRoomList(std::list<Room*> &target, int32_t gameType)
 {
+    std::unique_lock<std::recursive_mutex> lck(roomlist_mtx);
+
     // at first, clear target list to be filled
     target.clear();
 

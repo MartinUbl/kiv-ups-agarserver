@@ -19,6 +19,9 @@
 /* respawn time in seconds */
 #define MAP_OBJECT_RESPAWN_TIME 60
 
+/* number of seconds before room is shut down when empty */
+#define ROOM_EMPTY_SHUTDOWN 60
+
 class WorldObject;
 struct Position;
 
@@ -126,6 +129,15 @@ class Room
         /* Updates room contents */
         void Update(uint32_t diff);
 
+        /* Thread runner */
+        void Run();
+
+        /* Set running state */
+        void SetRunning(bool state);
+
+        /* waits for thread shutdown */
+        void WaitForShutdown();
+
         /* lock for cell map updates */
         std::recursive_mutex cellMapLock;
 
@@ -164,6 +176,24 @@ class Room
 
         /* Map grid - we will do updates using simple grid and visibility detection */
         CellMap m_cellMap;
+
+        /* Is still running? */
+        bool IsRunning();
+
+        /* last update time */
+        uint32_t m_lastUpdateTime;
+
+        /* when room recognizes its empty state */
+        uint32_t m_emptyStateTime;
+
+        /* is room running? */
+        bool m_isRunning;
+
+        /* update thread instance */
+        std::thread* m_updateThread;
+
+        /* generic miutex */
+        std::mutex generic_mtx;
 };
 
 #endif

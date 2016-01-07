@@ -86,6 +86,12 @@ class Network
     public:
         ~Network();
 
+        /* Main method for running network updates */
+        void Run();
+
+        /* Shuts whole networking down */
+        void Shutdown();
+
         /* Starts up networking, prepares everything needed to be run */
         bool Startup();
         /* Accepts new connections and processes messages/errors on currently estabilished ones */
@@ -104,6 +110,16 @@ class Network
         /* Overrides player in client map */
         void OverridePlayerClient(Player* oldplayer, Player* newplayer);
 
+        /* retrieves received bytes count */
+        uint64_t GetRecvBytesCount();
+        /* retrieves sent bytes count */
+        uint64_t GetSentBytesCount();
+
+        /* retrieves received packets count */
+        uint64_t GetRecvPacketsCount();
+        /* retrieves sent packets count */
+        uint64_t GetSentPacketsCount();
+
     protected:
         /* Hidden singleton constructor */
         Network();
@@ -114,11 +130,16 @@ class Network
         /* Reads data from all sockets enlisted, detects connection problems, disconnections, etc. */
         void UpdateClients();
 
+        /* Sets running flag */
+        void SetRunningFlag(bool state);
+        /* Is server still intended to run? */
+        bool IsRunning();
+
         /* Sends game packet to specified socket */
         void SendPacket(SOCK socket, GamePacket &pkt);
 
         /* Closes client socket using OS-dependent routines */
-        void CloseClientSocket(SOCK socket);
+        void CloseSocket_gen(SOCK socket);
 
         /* Inserts new client to internal list */
         void InsertClient(Player* plr);
@@ -134,6 +155,21 @@ class Network
 
         /* List of all connected clients */
         std::list<ClientRecord*> m_clients;
+
+        /* instance of network thread */
+        std::thread* m_networkThread;
+
+        /* is server still intended to run? */
+        bool m_isRunning;
+
+        /* generic networking mutex */
+        std::mutex generic_mtx;
+
+        uint64_t m_recvBytesCount;
+        uint64_t m_sentBytesCount;
+
+        uint64_t m_recvPacketsCount;
+        uint64_t m_sentPacketsCount;
 };
 
 #define sNetwork Singleton<Network>::getInstance()
