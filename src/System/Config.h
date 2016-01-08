@@ -14,6 +14,7 @@ enum RecognizedConfigOption
     CONF_BIND_IP = 0,
     CONF_PORT = 1,
     CONF_DEBUG_LOG = 2,
+    CONF_LOG_FILE = 3,
 
     CONF_MAX
 };
@@ -49,7 +50,8 @@ struct ConfigOption
 static ConfigOption configOptions[] = {
     { "BIND_IP",    CONF_TYPE_STRING,       "0.0.0.0" } /* CONF_BIND_IP */,
     { "PORT",       CONF_TYPE_INT,          8969      } /* CONF_PORT */,
-    { "DEBUG_LOG",  CONF_TYPE_INT,          0         } /* CONF_DEBUG_LOG */
+    { "DEBUG_LOG",  CONF_TYPE_INT,          0         } /* CONF_DEBUG_LOG */,
+    { "LOG_FILE",   CONF_TYPE_STRING,       "server.log" } /* CONF_LOG_FILE */
 };
 
 class Config

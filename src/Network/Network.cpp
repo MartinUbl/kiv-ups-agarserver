@@ -246,12 +246,20 @@ void Network::UpdateClients()
     Session* sess;
     uint8_t* recvdata;
     GamePacket pkt;
+    time_t tmout;
 
     // go through all clients
     for (std::list<ClientRecord*>::iterator itr = m_clients.begin(); itr != m_clients.end(); )
     {
         plr = (*itr)->player;
         sess = plr->GetSession();
+
+        // if session is marked for expiration, wait for it
+        if (tmout = sess->GetSessionTimeoutValue())
+        {
+            if (tmout < time(nullptr))
+                sess->Kick();
+        }
 
         // if the session is marked as expired, disconnect client
         if (sess->IsMarkedAsExpired())
@@ -317,6 +325,16 @@ void Network::UpdateClients()
                 CloseSocket_gen(sess->GetSocket());
                 itr = RemoveClient(itr);
                 continue;
+            }
+        }
+        // connection abort, this may be due to network error
+        else if (error == SOCKETCONNABORT)
+        {
+            // set timeout if necessary
+            if (!sess->GetSessionTimeoutValue())
+            {
+                sess->SetSessionTimeoutValue(SESSION_INACTIVITY_EXPIRE);
+                sLog->Error("Client (IP: %s) aborted connection, marking session as expired and waiting for timeout", sess->GetRemoteAddr());
             }
         }
         // connection closed by remote endpoint (either controlled or errorneous scenario, but initiated by client)
@@ -398,7 +416,7 @@ void Network::SendPacket(SOCK socket, GamePacket &pkt)
     m_sentPacketsCount++;
 
     // send response
-    send(socket, (const char*)tosend, pkt.GetSize() + GAMEPACKET_HEADER_SIZE, 0);
+    send(socket, (const char*)tosend, pkt.GetSize() + GAMEPACKET_HEADER_SIZE, MSG_NOSIGNAL);
 }
 
 Session* Network::FindSessionByPlayerId(uint32_t playerId)

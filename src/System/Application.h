@@ -15,12 +15,12 @@ class Application
         /* Main run method called from main() entry point */
         int Run();
 
+        /* Prints server statistics */
+        void PrintStats();
+
     protected:
         /* Hidden singleton constructor */
         Application();
-
-        /* Prints server statistics */
-        void PrintStats();
 
     private:
         //

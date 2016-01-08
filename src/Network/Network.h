@@ -17,6 +17,7 @@
 
  #define SOCKETWOULDBLOCK WSAEWOULDBLOCK
  #define SOCKETCONNRESET  WSAECONNRESET
+ #define SOCKETCONNABORT  WSAECONNABORTED
  #define LASTERROR() WSAGetLastError()
  #define INET_PTON(fam,addrptr,buff) InetPton(fam,addrptr,buff)
  #define INET_NTOP(fam,addrptr,buff,socksize) InetNtop(fam,addrptr,buff,socksize)
@@ -37,11 +38,15 @@
  #define INVALID_SOCKET -1
 
  #define SOCKETWOULDBLOCK EAGAIN
- // 10054L ??
+ #define SOCKETCONNABORT ECONNABORTED
  #define SOCKETCONNRESET ECONNRESET
  #define LASTERROR() errno
  #define INET_PTON(fam,addrptr,buff) inet_pton(fam,addrptr,buff)
  #define INET_NTOP(fam,addrptr,buff,socksize) inet_ntop(fam,addrptr,buff,socksize)
+#endif
+
+#ifndef MSG_NOSIGNAL
+ #define MSG_NOSIGNAL 0
 #endif
 
 /* 1 kB is the maximum size allowed */
@@ -54,6 +59,9 @@
 
 /* size of listen queue for our socket */
 #define NETWORK_LISTEN_BACKLOG_SIZE 10
+
+/* wait this amount of seconds before kicking whole session */
+#define SESSION_INACTIVITY_EXPIRE 60
 
 /* WinSock nonblocking flag; this value is not defined in any WinSock headers, but is described as constant */
 #define WINSOCK_NONBLOCKING_ARG 1

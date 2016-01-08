@@ -57,6 +57,11 @@ class Session
         /* Retrieves last measured latency */
         uint32_t GetLatency();
 
+        /* Retrieves timeout value */
+        time_t GetSessionTimeoutValue();
+        /* Sets timeout value */
+        void SetSessionTimeoutValue(time_t tm);
+
     protected:
         /* increases violation counter */
         void IncreaseViolationCounter();
@@ -86,6 +91,9 @@ class Session
         uint32_t m_lastPingSendTime;
         /* session key (for restoring session) */
         std::string m_sessionKey;
+
+        /* time, when session times out */
+        time_t m_sessionTimeout;
 };
 
 #endif

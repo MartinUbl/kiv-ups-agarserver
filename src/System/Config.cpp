@@ -78,7 +78,10 @@ void Config::ParseConfigOption(char* line)
 
     p2 = p1;
 
-    while (line[p2] != '\0')
+    while (line[p2] != '\r' && line[p2] != '\n' && line[p2] != '\0')
+        p2++;
+
+    if (line[p2] == '\r' || line[p2] == '\n')
         p2++;
 
     // invalid syntax
@@ -88,8 +91,10 @@ void Config::ParseConfigOption(char* line)
         return;
     }
 
-    if (line[p2 - 1] == '\n')
+    if (line[p2 - 1] == '\n' || line[p2 - 1] == '\r')
         line[p2 - 1] = '\0';
+    if (line[p2 - 2] == '\n' || line[p2 - 2] == '\r')
+        line[p2 - 2] = '\0';
 
     for (i = 0; i < sizeof(configOptions) / sizeof(ConfigOption); i++)
     {

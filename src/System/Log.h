@@ -21,8 +21,12 @@ class Log
         /* Hidden singleton constructor */
         Log();
 
+        /* Method that logs into file */
+        void FileLog(const char* str);
+
     private:
-        //
+        /* logfile opened */
+        FILE* m_logFile;
 };
 
 #define sLog Singleton<Log>::getInstance()

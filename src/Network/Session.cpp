@@ -17,6 +17,7 @@ Session::Session(Player* plr) : m_player(plr)
     m_latency = 0;
     m_lastPingSendTime = 0;
     m_isExpired = false;
+    m_sessionTimeout = 0;
 }
 
 Session::~Session()
@@ -119,6 +120,16 @@ sockaddr_in const& Session::GetSockAddr()
 const char* Session::GetRemoteAddr()
 {
     return m_remoteAddr.c_str();
+}
+
+time_t Session::GetSessionTimeoutValue()
+{
+    return m_sessionTimeout;
+}
+
+void Session::SetSessionTimeoutValue(time_t tm)
+{
+    m_sessionTimeout = tm;
 }
 
 void Session::IncreaseViolationCounter()

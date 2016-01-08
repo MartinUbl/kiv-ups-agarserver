@@ -170,12 +170,9 @@ void Room::Run()
 
         Update(delay);
 
-        if (delay > 100)
-            delay = 100;
-
         m_lastUpdateTime = getMSTime();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100 - delay + 1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 

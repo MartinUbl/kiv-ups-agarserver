@@ -7,6 +7,7 @@
 #include "Gameplay.h"
 #include "Helpers.h"
 
+#include <signal.h>
 #include <thread>
 
 Application::Application()
@@ -19,10 +20,27 @@ Application::~Application()
     //
 }
 
+void sigIntHandler(int s)
+{
+    sNetwork->Shutdown();
+    sGameplay->Shutdown();
+
+    sApplication->PrintStats();
+
+    exit(1);
+}
+
 bool Application::Init(int argc, char** argv)
 {
     sLog->Info("Agar.io game remake server emulator - KIV/UPS - semestral work project");
     sLog->Info("Made by Kennny (c) 2015\n");
+
+    // catch sigint
+    signal(SIGINT, sigIntHandler);
+#ifndef _WIN32
+    // ignore SIGPIPE
+    signal(SIGPIPE, SIG_IGN);
+#endif
 
     // init PRNG
     srand((unsigned int)time(nullptr));
