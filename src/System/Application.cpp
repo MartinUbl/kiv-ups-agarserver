@@ -72,6 +72,13 @@ void Application::PrintStats()
     sLog->Info("Server sent bytes: %llu B", sNetwork->GetSentBytesCount());
 }
 
+void Application::PrintAvailableCommands()
+{
+    sLog->Info("help    - displays this message");
+    sLog->Info("exit    - exits whole server");
+    sLog->Info("stats   - print statistics");
+}
+
 int Application::Run()
 {
     std::string input;
@@ -79,10 +86,14 @@ int Application::Run()
     while (true)
     {
         std::cout << "> ";
-        std::cin >> input;
+        std::getline(std::cin, input);
 
+        if (input == "help")
+        {
+            PrintAvailableCommands();
+        }
         // shut server down
-        if (input == "exit")
+        else if (input == "exit")
         {
             sNetwork->Shutdown();
             sGameplay->Shutdown();
@@ -94,6 +105,10 @@ int Application::Run()
         else if (input == "stats")
         {
             PrintStats();
+        }
+        else
+        {
+            std::cout << "Unknown command, type 'help' for list of available commands" << std::endl;
         }
 
         std::cout << std::endl;

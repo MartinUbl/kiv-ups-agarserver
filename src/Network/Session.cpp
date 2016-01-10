@@ -18,6 +18,7 @@ Session::Session(Player* plr) : m_player(plr)
     m_lastPingSendTime = 0;
     m_isExpired = false;
     m_sessionTimeout = 0;
+    m_pingWaitingResponse = false;
 }
 
 Session::~Session()
@@ -30,13 +31,24 @@ void Session::Update(uint32_t diff)
     uint32_t msnow = getMSTime();
 
     // send ping packet if needed
-    if (getMSTimeDiff(m_lastPingSendTime, msnow) > PING_TIMER)
+    if (!m_pingWaitingResponse && getMSTimeDiff(m_lastPingSendTime, msnow) > PING_TIMER)
     {
         m_lastPingSendTime = msnow;
+
+        m_pingWaitingResponse = true;
 
         // send ping packet
         GamePacket pingpacket(SP_PING);
         sNetwork->SendPacket(this, pingpacket);
+    }
+    else if (m_pingWaitingResponse && getMSTimeDiff(m_lastPingSendTime, msnow) > PING_RESPONSE_TIME_LIMIT)
+    {
+        // do not allow termination once again
+        m_pingWaitingResponse = false;
+
+        // schedule session expiry, if not already scheduled
+        if (!GetSessionTimeoutValue())
+            SetSessionTimeoutValue(SESSION_INACTIVITY_EXPIRE);
     }
 }
 
@@ -129,7 +141,7 @@ time_t Session::GetSessionTimeoutValue()
 
 void Session::SetSessionTimeoutValue(time_t tm)
 {
-    m_sessionTimeout = tm;
+    m_sessionTimeout = time(nullptr) + tm;
 }
 
 void Session::IncreaseViolationCounter()
@@ -197,6 +209,8 @@ const char* Session::GetSessionKey()
 void Session::SignalLatencyMeasure()
 {
     m_latency = getMSTimeDiff(m_lastPingSendTime, getMSTime());
+
+    m_pingWaitingResponse = false;
 }
 
 uint32_t Session::GetLatency()

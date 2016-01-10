@@ -1,6 +1,7 @@
 #include "General.h"
 #include "Config.h"
 #include "Log.h"
+#include "Helpers.h"
 
 #include <string>
 
@@ -10,7 +11,7 @@ Config::Config()
     ConfigOption *opt;
 
     // load defaults to config map
-    for (i = 0; i < sizeof(configOptions) / sizeof(ConfigOption); i++)
+    for (i = 0; i < (int)(sizeof(configOptions) / sizeof(ConfigOption)); i++)
     {
         opt = &configOptions[i];
 
@@ -27,7 +28,7 @@ Config::~Config()
     ConfigOption *opt;
 
     // free memory allocated for string-type config values
-    for (i = 0; i < sizeof(configOptions) / sizeof(ConfigOption); i++)
+    for (i = 0; i < (int)(sizeof(configOptions) / sizeof(ConfigOption)); i++)
     {
         opt = &configOptions[i];
 
@@ -70,6 +71,7 @@ bool Config::Load(char* configPath)
 void Config::ParseConfigOption(char* line)
 {
     int p1, p2, i;
+    std::string tmp;
 
     p1 = 0;
 
@@ -96,14 +98,29 @@ void Config::ParseConfigOption(char* line)
     if (line[p2 - 2] == '\n' || line[p2 - 2] == '\r')
         line[p2 - 2] = '\0';
 
-    for (i = 0; i < sizeof(configOptions) / sizeof(ConfigOption); i++)
+    for (i = 0; i < (int)(sizeof(configOptions) / sizeof(ConfigOption)); i++)
     {
         if (!strncmp(configOptions[i].name.c_str(), line, p1))
         {
-            if (configOptions[i].vtype == CONF_TYPE_STRING)
-                SetStringValue((RecognizedConfigOption)i, std::string(line+p1+1, p2));
-            else if (configOptions[i].vtype == CONF_TYPE_INT)
-                SetIntValue((RecognizedConfigOption)i, std::stoi(std::string(line + p1 + 1, p2)));
+            try
+            {
+                tmp = std::string(line + p1 + 1, p2);
+
+                if (configOptions[i].vtype == CONF_TYPE_STRING)
+                    SetStringValue((RecognizedConfigOption)i, tmp);
+                else if (configOptions[i].vtype == CONF_TYPE_INT)
+                {
+                    if (IsValidInteger(tmp.c_str()))
+                        SetIntValue((RecognizedConfigOption)i, std::stoi(tmp));
+                    else
+                        throw new std::invalid_argument("");
+                }
+            }
+            catch (...)
+            {
+                tmp = (configOptions[i].vtype == CONF_TYPE_STRING) ? configOptions[i].value.strval : std::to_string(configOptions[i].value.intval);
+                sLog->Error("Invalid argument supplied for option %s, using default (%s)", configOptions[i].name.c_str(), tmp.c_str());
+            }
         }
     }
 }

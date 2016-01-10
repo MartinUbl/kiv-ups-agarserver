@@ -2,6 +2,7 @@
 #define AGAR_HELPERS_H
 
 bool IsValidUsername(const char* username);
+bool IsValidInteger(const char* str);
 
 // method for retrieving time in milliseconds to determine difference
 #ifdef _WIN32

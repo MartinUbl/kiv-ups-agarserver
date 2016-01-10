@@ -35,7 +35,7 @@ void PacketHandlers::HandlePong(Session* sess, GamePacket& packet)
 
 void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
 {
-    std::string username, password;
+    std::string username, password, sessionKey;
     uint32_t version, playerId;
     uint8_t statusCode;
 
@@ -48,6 +48,8 @@ void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
     GamePacket resp(SP_LOGIN_RESPONSE, 1);
     statusCode = STATUS_LOGIN_OK;
     playerId = 0;
+
+    sessionKey = sess->CreateSessionKey();
 
     // retrieve user record from database
     StorageResult::UserRecord* user = sStorage->GetUserByUsername(username.c_str());
@@ -76,7 +78,26 @@ void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
             // if there's another user logged in to that account, kick him
             Session* existing = sNetwork->FindSessionByPlayerId(user->id);
             if (existing)
-                existing->Kick();
+            {
+                Room* plroom = nullptr;
+                if (existing->GetPlayer()->GetRoomId())
+                    plroom = sGameplay->GetRoom(existing->GetPlayer()->GetRoomId());
+
+                // Possible scenarios:
+                // player is playing, somebody tries to login --> kick player
+                // player is in lobby, somebody tries to login --> kick player
+                // player is offline in lobby (session in timeout), somebody tries to login --> kick player
+                // player is offline in game (session in timeout), somebody tries to login --> suggest session restore
+
+                // if existing player does not have timeout interval or is not in any room, kick
+                if (!existing->GetSessionTimeoutValue() || !plroom)
+                    existing->Kick();
+                else // otherwise suggest client to restore session
+                {
+                    statusCode = STATUS_LOGIN_SESSION_RESTORE;
+                    sessionKey = existing->GetSessionKey();
+                }
+            }
 
             sess->GetPlayer()->SetId(user->id);
             sess->GetPlayer()->SetName(user->username);
@@ -86,19 +107,25 @@ void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
 
     // send response
     resp.WriteUInt8(statusCode);
-    if (statusCode == STATUS_LOGIN_OK)
+    if (statusCode == STATUS_LOGIN_OK || statusCode == STATUS_LOGIN_SESSION_RESTORE)
     {
         resp.WriteUInt32(playerId);
 
         // move connection state to "lobby" after logging in
-        sess->SetConnectionState(CONNECTION_STATE_LOBBY);
+        if (statusCode != STATUS_LOGIN_SESSION_RESTORE)
+            sess->SetConnectionState(CONNECTION_STATE_LOBBY);
     }
 
     // write session key in case of session restore
-    resp.WriteString(sess->CreateSessionKey());
+    resp.WriteString(sessionKey.c_str());
 
     sNetwork->SendPacket(sess, resp);
     delete user;
+
+    // kick current session, the client will reset connection status, and start again
+    // this is due to allow us to have generic flow
+    if (statusCode == STATUS_LOGIN_SESSION_RESTORE)
+        sess->Kick();
 }
 
 void PacketHandlers::HandleRegisterRequest(Session* sess, GamePacket& packet)
@@ -274,10 +301,10 @@ void PacketHandlers::HandleRoomListRequest(Session* sess, GamePacket& packet)
 void PacketHandlers::HandleJoinRoomRequest(Session* sess, GamePacket& packet)
 {
     uint32_t roomId;
-    uint8_t spectator;
+    /*uint8_t spectator;*/
 
     roomId = packet.ReadUInt32();
-    spectator = packet.ReadUInt8();
+    /*spectator = */packet.ReadUInt8();
 
     Room* rm = sGameplay->GetRoom(roomId);
 
@@ -449,7 +476,6 @@ void PacketHandlers::HandleMoveHeartbeat(Session* sess, GamePacket& packet)
     // TODO: checks for too fast movement, etc.
 
     Player* plr = sess->GetPlayer();
-    Room* plroom = sGameplay->GetRoom(plr->GetRoomId());
     float posX, posY;
 
     posX = packet.ReadFloat();

@@ -7,7 +7,9 @@
 /* Maximum violations before disconnection */
 #define MAX_SESSION_VIOLATIONS 3
 /* Number of milliseconds between pings */
-#define PING_TIMER 60000
+#define PING_TIMER 5000
+/* Limit response time to X milliseconds */
+#define PING_RESPONSE_TIME_LIMIT 5000
 
 /* Class holding information about session */
 class Session
@@ -89,6 +91,8 @@ class Session
         uint32_t m_latency;
         /* last ping send time */
         uint32_t m_lastPingSendTime;
+        /* ping sent, waiting for response - flag */
+        bool m_pingWaitingResponse;
         /* session key (for restoring session) */
         std::string m_sessionKey;
 

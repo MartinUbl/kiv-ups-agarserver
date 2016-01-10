@@ -18,6 +18,9 @@ class Application
         /* Prints server statistics */
         void PrintStats();
 
+        /* Prints available commands */
+        void PrintAvailableCommands();
+
     protected:
         /* Hidden singleton constructor */
         Application();

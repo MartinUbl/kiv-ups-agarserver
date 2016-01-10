@@ -63,7 +63,7 @@ void Storage::CheckTableColumns(int index, SQLiteQueryResult* structure)
         colSetToAdd[tblrec.structure[i].name] = tblrec.structure[i].type;
 
     // go through all actual columns
-    while (rrow = structure->Fetch())
+    while ((rrow = structure->Fetch()) != nullptr)
     {
         tmp = rrow->GetString(1);
         // if it does not exist in expected columns set, delete it;
@@ -128,7 +128,7 @@ void Storage::CheckDBStructure()
     int i;
 
     // go through all known tables in DB
-    for (i = 0; i < sizeof(DatabaseStructure::KnownTables) / sizeof(DatabaseStructure::DBKnownTable); i++)
+    for (i = 0; i < (int)(sizeof(DatabaseStructure::KnownTables) / sizeof(DatabaseStructure::DBKnownTable)); i++)
     {
         // retrieve structure
         res = GetTableStructure(DatabaseStructure::KnownTables[i].name);

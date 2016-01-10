@@ -79,11 +79,12 @@ bool Network::Startup()
     m_sockAddr.sin_family = AF_INET;
     m_sockAddr.sin_port = htons(m_port);
 
-#ifdef _WIN32
-    INET_PTON(AF_INET, bindAddr.c_str(), &m_sockAddr.sin_addr.s_addr);
-#else
-    m_sockAddr.sin_addr.s_addr = inet_addr(bindAddr.c_str());
-#endif
+    // resolve IP address from entered host/IP address in config
+    if (INET_PTON(AF_INET, bindAddr.c_str(), &m_sockAddr.sin_addr.s_addr) != 1)
+    {
+        sLog->Error("Could not resolve %s to valid bind address, are you sure you entered correct address, and you have rights to bind socket to it?", bindAddr.c_str());
+        return false;
+    }
 
     // detect invalid address supplied in config
     if (m_sockAddr.sin_addr.s_addr == INADDR_NONE)
@@ -254,19 +255,24 @@ void Network::UpdateClients()
         plr = (*itr)->player;
         sess = plr->GetSession();
 
-        // if session is marked for expiration, wait for it
-        if (tmout = sess->GetSessionTimeoutValue())
-        {
-            if (tmout < time(nullptr))
-                sess->Kick();
-        }
-
         // if the session is marked as expired, disconnect client
         if (sess->IsMarkedAsExpired())
         {
             sLog->Debug("Client session (IP: %s) expired, disconnecting", sess->GetRemoteAddr());
             CloseSocket_gen(sess->GetSocket());
             itr = RemoveClient(itr);
+            continue;
+        }
+
+        // if session is marked for expiration, wait for it
+        // expired sessions are not valid anymore - they are just kept in list for possible retrieval
+        // by another session
+        if ((tmout = sess->GetSessionTimeoutValue()) != 0)
+        {
+            if (tmout < time(nullptr))
+                sess->Kick();
+
+            ++itr;
             continue;
         }
 
@@ -299,7 +305,7 @@ void Network::UpdateClients()
                         delete[] recvdata;
 
                         sLog->Error("Received malformed packet: opcode %u, size %u, real size %u; disconnecting client (IP: %s)", header_buf[0], header_buf[1], result, sess->GetRemoteAddr());
-                        //CloseClientSocket(sess->GetSocket());
+                        //CloseSocket_gen(sess->GetSocket());
                         itr = RemoveClient(itr);
                         continue;
                     }
@@ -340,8 +346,23 @@ void Network::UpdateClients()
         // connection closed by remote endpoint (either controlled or errorneous scenario, but initiated by client)
         else if (error == SOCKETCONNRESET)
         {
-            sLog->Debug("Client (IP: %s) disconnected", sess->GetRemoteAddr());
-            itr = RemoveClient(itr);
+            if (plr->GetRoomId())
+            {
+                // set timeout if necessary
+                if (!sess->GetSessionTimeoutValue())
+                {
+                    sess->SetSessionTimeoutValue(SESSION_INACTIVITY_EXPIRE);
+                    sLog->Debug("Client (IP: %s) disconnected in room, marking session as expired and waiting for timeout", sess->GetRemoteAddr());
+                }
+
+                ++itr;
+            }
+            else
+            {
+                sLog->Debug("Client (IP: %s) disconnected", sess->GetRemoteAddr());
+                itr = RemoveClient(itr);
+            }
+
             continue;
         }
         else
@@ -432,10 +453,13 @@ Session* Network::FindSessionByPlayerId(uint32_t playerId)
 
 Session* Network::FindSessionBySessionKey(const char* sessionKey)
 {
+    Session* sess;
+
     for (std::list<ClientRecord*>::iterator itr = m_clients.begin(); itr != m_clients.end(); ++itr)
     {
-        if (strcmp((*itr)->player->GetSession()->GetSessionKey(), sessionKey) == 0)
-            return (*itr)->player->GetSession();
+        sess = (*itr)->player->GetSession();
+        if (strcmp(sess->GetSessionKey(), sessionKey) == 0 && !sess->IsMarkedAsExpired())
+            return sess;
     }
 
     return nullptr;

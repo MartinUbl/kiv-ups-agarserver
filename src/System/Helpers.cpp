@@ -19,3 +19,21 @@ bool IsValidUsername(const char* username)
 
     return true;
 }
+
+bool IsValidInteger(const char* str)
+{
+    char chr;
+    int i;
+
+    for (i = 0; str[i] != '\0'; i++)
+    {
+        chr = str[i];
+
+        if (chr >= '0' && chr <= '9')
+            continue;
+
+        return false;
+    }
+
+    return true;
+}

@@ -175,8 +175,8 @@ class MultiplexBroadcastPacketCellVisitor : public BaseCellVisitor
 class ManhattanClosestCellVisitor : public BaseCellVisitor
 {
     public:
-        ManhattanClosestCellVisitor(Position const& src, uint32_t sourceSize, WorldObject* except) : m_sourcePos(src), m_closest(nullptr), m_closestDistance(10000.0f),
-            m_sourceSize(sourceSize), m_exception(except) { };
+        ManhattanClosestCellVisitor(Position const& src, uint32_t sourceSize, WorldObject* except) : m_sourcePos(src), m_exception(except),
+            m_sourceSize(sourceSize), m_closest(nullptr), m_closestDistance(10000.0f) { };
 
         void Visit(Cell* cell) override;
 
