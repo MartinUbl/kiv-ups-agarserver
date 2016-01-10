@@ -550,3 +550,19 @@ void PacketHandlers::HandlePlayerExit(Session* sess, GamePacket& packet)
 
     // player exit packet was sent in RemovePlayer call, client exits room automatically
 }
+
+void PacketHandlers::HandleStatsRequest(Session* sess, GamePacket& packet)
+{
+    Player* plr = sess->GetPlayer();
+    Room* plroom = sGameplay->GetRoom(plr->GetRoomId());
+
+    if (!plroom)
+    {
+        sLog->Error("Received statistics request when not in room!");
+        return;
+    }
+
+    GamePacket stats(SP_STATS_RESPONSE);
+    plroom->BuildStatsBlock(stats);
+    sNetwork->SendPacket(sess, stats);
+}

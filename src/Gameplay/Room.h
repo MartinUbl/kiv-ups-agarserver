@@ -66,11 +66,15 @@ class Room
         void BroadcastPacket(GamePacket& pkt);
         /* Broadcasts packet to cell and its neighbors */
         void BroadcastPacketToNearCells(GamePacket& pkt, uint32_t centerCellX, uint32_t centerCellY);
+        /* Builds stats packet and broadcasts it to all in room */
+        void BroadcastStats();
 
         /* Builds objects update for player */
         void BuildObjectCreateBlock(GamePacket& pkt, Player* plr);
         /* Builds players update for player */
         void BuildPlayerCreateBlock(GamePacket& pkt, Player* plr);
+        /* Build statistics packet block */
+        void BuildStatsBlock(GamePacket& pkt);
 
         /* Adds world object to evidence and to grid */
         void AddWorldObject(WorldObject* wobj);

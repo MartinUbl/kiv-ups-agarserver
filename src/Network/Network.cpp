@@ -403,6 +403,9 @@ std::list<ClientRecord*>::iterator Network::RemoveClient(std::list<ClientRecord*
         rm->RemovePlayer((*rec)->player);
     }
 
+    delete (*rec)->player->GetSession();
+    delete (*rec)->player;
+
     return m_clients.erase(rec);
 }
 

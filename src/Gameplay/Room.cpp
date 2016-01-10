@@ -203,6 +203,8 @@ void Room::AddPlayer(Player* player)
 
     m_playerList.push_back(player);
     player->SetRoomId(m_id);
+
+    BroadcastStats();
 }
 
 void Room::RemovePlayerFromGrid(Player* player)
@@ -240,6 +242,8 @@ void Room::RemovePlayer(Player* player)
     pktexit.WriteUInt32(player->GetId());
     pktexit.WriteUInt8(STATUS_PLAYEREXIT_LEAVE); // TODO: make better use of this field
     BroadcastPacket(pktexit);
+
+    BroadcastStats();
 }
 
 void Room::PlaceNewPlayer(Player* player)
@@ -470,6 +474,28 @@ void Room::BuildPlayerCreateBlock(GamePacket& pkt, Player* plr)
 
     // overwrite zero value with valid count
     pkt.WriteUInt32At(visitor.GetCounter(), sizePos);
+}
+
+void Room::BuildStatsBlock(GamePacket& pkt)
+{
+    Player* pl;
+
+    pkt.WriteUInt32(m_playerList.size());
+    for (std::list<Player*>::iterator itr = m_playerList.begin(); itr != m_playerList.end(); ++itr)
+    {
+        pl = *itr;
+
+        pkt.WriteString(pl->GetName());
+        pkt.WriteUInt32(pl->GetSize());
+        pkt.WriteUInt32(pl->GetSession()->GetLatency());
+    }
+}
+
+void Room::BroadcastStats()
+{
+    GamePacket pkt(SP_STATS_RESPONSE);
+    BuildStatsBlock(pkt);
+    BroadcastPacket(pkt);
 }
 
 uint32_t Room::GetId()
