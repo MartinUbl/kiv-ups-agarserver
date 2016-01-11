@@ -553,6 +553,7 @@ void PacketHandlers::HandlePlayerExit(Session* sess, GamePacket& packet)
     }
 
     plroom->RemovePlayer(plr);
+    plr->GetSession()->SetConnectionState(CONNECTION_STATE_LOBBY);
 
     // player exit packet was sent in RemovePlayer call, client exits room automatically
 }
