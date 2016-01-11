@@ -93,11 +93,15 @@ Player* Session::GetPlayer()
     return m_player;
 }
 
-void Session::OverridePlayer(Player* pl)
+void Session::OverridePlayer(Player* pl, const char* sessionKey)
 {
     // old player will be destroyed elsewhere, but only by networking thread
 
     m_player = pl;
+
+    // override session key if necessary
+    if (sessionKey)
+        m_sessionKey = sessionKey;
 }
 
 void Session::SetConnectionInfo(SOCK socket, sockaddr_in &addr, char* remoteAddr)

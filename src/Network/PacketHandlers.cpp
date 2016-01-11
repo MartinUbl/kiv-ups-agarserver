@@ -267,7 +267,7 @@ void PacketHandlers::HandleRestoreSession(Session* sess, GamePacket& packet)
         dummypl->OverrideSession(oldsess);
 
         // new session should contain old player
-        sess->OverridePlayer(oldpl);
+        sess->OverridePlayer(oldpl, oldsess->GetSessionKey());
         // and old session should contain new player (dummy)
         oldsess->OverridePlayer(dummypl);
 

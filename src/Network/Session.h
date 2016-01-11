@@ -28,7 +28,7 @@ class Session
         /* Retrieves Player pointer */
         Player* GetPlayer();
         /* Overrides player pointer after i.e. session restore */
-        void OverridePlayer(Player* pl);
+        void OverridePlayer(Player* pl, const char* sessionKey = nullptr);
 
         /* Sets connection info (socket descriptor and socket info) */
         void SetConnectionInfo(SOCK socket, sockaddr_in &addr, char* remoteAddr = nullptr);
