@@ -83,6 +83,8 @@ void PacketHandlers::HandleLoginRequest(Session* sess, GamePacket& packet)
                 if (existing->GetPlayer()->GetRoomId())
                     plroom = sGameplay->GetRoom(existing->GetPlayer()->GetRoomId());
 
+                sLog->Info("Existing player: %u, timeout: %u, room: %u", user->id, existing->GetSessionTimeoutValue(), plroom ? 1 : 0);
+
                 // Possible scenarios:
                 // player is playing, somebody tries to login --> kick player
                 // player is in lobby, somebody tries to login --> kick player
@@ -212,6 +214,8 @@ void PacketHandlers::HandleRestoreSession(Session* sess, GamePacket& packet)
 
     sessionKey = packet.ReadString();
     playerId = packet.ReadUInt32();
+
+    sLog->Info("Attempting to restore session of player %u, sessionKey %s", playerId, sessionKey.c_str());
 
     GamePacket resp(SP_RESTORE_SESSION_RESPONSE);
 
