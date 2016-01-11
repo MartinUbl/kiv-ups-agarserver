@@ -208,12 +208,18 @@ void PacketHandlers::HandleRegisterRequest(Session* sess, GamePacket& packet)
 void PacketHandlers::HandleRestoreSession(Session* sess, GamePacket& packet)
 {
     std::string sessionKey;
+    uint32_t playerId;
 
     sessionKey = packet.ReadString();
+    playerId = packet.ReadUInt32();
 
     GamePacket resp(SP_RESTORE_SESSION_RESPONSE);
 
     Session* existing = sNetwork->FindSessionBySessionKey(sessionKey.c_str());
+
+    if (existing && playerId && existing->GetPlayer()->GetId() != playerId)
+        existing = sNetwork->FindSessionByPlayerId(playerId);
+
     if (!existing)
     {
         resp.WriteUInt8(STATUS_SESSIONREST_FAILED_NOTFOUND);

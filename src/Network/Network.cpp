@@ -454,14 +454,14 @@ Session* Network::FindSessionByPlayerId(uint32_t playerId)
     return nullptr;
 }
 
-Session* Network::FindSessionBySessionKey(const char* sessionKey)
+Session* Network::FindSessionBySessionKey(const char* sessionKey, Session* except)
 {
     Session* sess;
 
     for (std::list<ClientRecord*>::iterator itr = m_clients.begin(); itr != m_clients.end(); ++itr)
     {
         sess = (*itr)->player->GetSession();
-        if (strcmp(sess->GetSessionKey(), sessionKey) == 0 && !sess->IsMarkedAsExpired())
+        if (sess != except && strcmp(sess->GetSessionKey(), sessionKey) == 0)
             return sess;
     }
 

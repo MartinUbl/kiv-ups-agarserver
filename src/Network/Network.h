@@ -113,7 +113,7 @@ class Network
         /* Finds session using player ID */
         Session* FindSessionByPlayerId(uint32_t playerId);
         /* Finds session using session key */
-        Session* FindSessionBySessionKey(const char* sessionKey);
+        Session* FindSessionBySessionKey(const char* sessionKey, Session* except = nullptr);
 
         /* Overrides player in client map */
         void OverridePlayerClient(Player* oldplayer, Player* newplayer);
